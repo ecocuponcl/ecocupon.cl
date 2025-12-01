@@ -49,4 +49,3 @@ export function Stripe({ children, options, className }: StripeProps) {
     </Elements>
   )
 }
-

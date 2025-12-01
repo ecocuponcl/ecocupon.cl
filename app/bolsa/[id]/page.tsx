@@ -230,4 +230,3 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
     </div>
   )
 }
-
