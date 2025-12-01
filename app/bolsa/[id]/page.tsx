@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { QRCodeSVG } from "qrcode.react"
-import { ArrowLeft, Download, Share2 } from "lucide-react"
+import { ArrowLeft, Download, Share2, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { generateQRCode, downloadQRImage, type QRData } from "@/lib/qr-api"
 
 // Mock data for demonstration
 const mockBagData = {
@@ -24,10 +24,11 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
   const { toast } = useToast()
   const [bag, setBag] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
 
   useEffect(() => {
     // In a real app, you would fetch this data from your API
-    // For demo purposes, we're using mock data
     setTimeout(() => {
       setBag({
         ...mockBagData,
@@ -36,6 +37,30 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
       setLoading(false)
     }, 500)
   }, [params.id])
+
+  useEffect(() => {
+    async function loadQR() {
+      if (bag) {
+        setQrLoading(true)
+        try {
+          const qrData: QRData = {
+            id: bag.id,
+            material: bag.material,
+            location: bag.location,
+            contact: bag.contact,
+            created: bag.created,
+          }
+          const qrUrl = await generateQRCode(qrData)
+          setQrImageUrl(qrUrl)
+        } catch (error) {
+          console.error("Error loading QR:", error)
+        } finally {
+          setQrLoading(false)
+        }
+      }
+    }
+    loadQR()
+  }, [bag])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -59,27 +84,13 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
     }
   }
 
-  const qrValue = bag
-    ? JSON.stringify({
-        id: bag.id,
-        material: bag.material,
-        location: bag.location,
-        contact: bag.contact,
-        created: bag.created,
-      })
-    : ""
-
   const downloadQR = () => {
-    const canvas = document.getElementById("qr-canvas") as HTMLCanvasElement
-    if (canvas) {
-      const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream")
-
-      const downloadLink = document.createElement("a")
-      downloadLink.href = pngUrl
-      downloadLink.download = `ecocupon-${bag.id}.png`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
+    if (qrImageUrl && bag) {
+      downloadQRImage(qrImageUrl, `latas-x-cash-${bag.id}.png`)
+      toast({
+        title: "QR descargado",
+        description: "El código QR ha sido descargado correctamente.",
+      })
     }
   }
 
@@ -87,7 +98,7 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `EcoCupón - Bolsa ${bag.id}`,
+          title: `LATAS X CA$H - Bolsa ${bag.id}`,
           text: `Bolsa de reciclaje de ${bag.material} en ${bag.location}. Contacto: ${bag.contact}`,
           url: window.location.href,
         })
@@ -98,7 +109,6 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
         })
       }
     } else {
-      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href)
       toast({
         title: "Enlace copiado",
@@ -109,9 +119,9 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto py-10 px-4">
         <div className="flex justify-center items-center h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-green-600" />
         </div>
       </div>
     )
@@ -119,7 +129,7 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
 
   if (!bag) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto py-10 px-4">
         <div className="mb-6">
           <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -139,7 +149,7 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 px-4">
       <div className="mb-6">
         <Link href="/mis-bolsas" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -194,13 +204,30 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
 
         <Card>
           <CardContent className="pt-6 flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-4 text-green-600">LATAS X CA$H</h2>
-            <div className="bg-white p-6 rounded-lg mb-6 border-2 border-green-500">
-              <QRCodeSVG id="qr-canvas" value={qrValue} size={250} level="H" includeMargin={true} />
+            <h2 className="text-3xl font-bold mb-6 text-green-600">LATAS X CA$H</h2>
+            <div className="bg-white p-4 rounded-lg mb-6 border-4 border-green-500 min-h-[300px] flex items-center justify-center">
+              {qrLoading ? (
+                <Loader2 className="h-12 w-12 animate-spin text-green-600" />
+              ) : qrImageUrl ? (
+                <img
+                  src={qrImageUrl || "/placeholder.svg"}
+                  alt={`QR Code for ${bag.id}`}
+                  width={280}
+                  height={280}
+                  className="w-[280px] h-[280px]"
+                />
+              ) : (
+                <p className="text-muted-foreground">Error al cargar QR</p>
+              )}
             </div>
 
-            <div className="flex space-x-4 w-full justify-center">
-              <Button variant="outline" onClick={downloadQR}>
+            <div className="flex flex-col sm:flex-row gap-2 w-full justify-center">
+              <Button
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={downloadQR}
+                disabled={!qrImageUrl}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Descargar QR
               </Button>

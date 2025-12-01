@@ -2,14 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, QrCode, Trash2, ExternalLink } from "lucide-react"
+import { ArrowLeft, QrCode, Trash2, ExternalLink, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 
-// Mock data for demonstration
 const initialBags = [
   {
     id: "ECO-123456",
@@ -61,103 +60,117 @@ export default function MisBolsas() {
   const getMaterialColor = (material: string) => {
     switch (material) {
       case "aluminio":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 border-blue-200"
       case "vidrio":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-100 text-emerald-800 border-emerald-200"
       case "mixto":
-        return "bg-purple-100 text-purple-800"
+        return "bg-amber-100 text-amber-800 border-amber-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-6">
-        <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al inicio
-        </Link>
-      </div>
-
-      <div className="flex flex-col items-center text-center mb-10">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">LATAS X CA$H</h1>
-        <p className="text-xl font-semibold text-green-600 mb-2">Mis Bolsas de Reciclaje</p>
-        <p className="text-muted-foreground max-w-2xl">
-          Gestiona tus bolsas de reciclaje activas y visualiza su información.
-        </p>
-      </div>
-
-      <div className="flex justify-end mb-6">
-        <Link href="/crear-qr">
-          <Button className="bg-green-600 hover:bg-green-700">Crear Nueva Bolsa</Button>
-        </Link>
-      </div>
-
-      {bags.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="pt-6 flex flex-col items-center justify-center text-center p-10">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <QrCode className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-medium mb-2">No tienes bolsas activas</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Crea tu primera bolsa de reciclaje para comenzar a gestionar tu reciclaje
-            </p>
-            <Link href="/crear-qr">
-              <Button variant="outline">Crear Primera Bolsa</Button>
+    <div className="min-h-screen">
+      <div className="gradient-hero py-8">
+        <div className="container mx-auto px-4">
+          <div className="mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al inicio
             </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bags.map((bag) => (
-            <Card key={bag.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{bag.id}</CardTitle>
-                  <Badge className={getMaterialColor(bag.material)} variant="outline">
-                    {bag.material.charAt(0).toUpperCase() + bag.material.slice(1)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ubicación:</span>
-                    <span>{bag.location}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Contacto:</span>
-                    <span>{bag.contact}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Creado:</span>
-                    <span>{formatDate(bag.created)}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between pt-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/bolsa/${bag.id}`}>
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Ver QR
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(bag.id)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Eliminar
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+          </div>
+
+          <div className="text-center">
+            <span className="inline-block bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-full mb-4">
+              Gestiona tu reciclaje
+            </span>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">LATAS X CA$H</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">Mis Bolsas de Reciclaje</p>
+          </div>
         </div>
-      )}
+      </div>
+
+      <div className="container mx-auto px-4 py-10">
+        <div className="flex justify-end mb-6">
+          <Link href="/crear-qr">
+            <Button className="bg-green-600 hover:bg-green-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Crear Nueva Bolsa
+            </Button>
+          </Link>
+        </div>
+
+        {bags.length === 0 ? (
+          <Card className="border-dashed border-2 shadow-none">
+            <CardContent className="pt-6 flex flex-col items-center justify-center text-center p-12">
+              <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-6">
+                <QrCode className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">No tienes bolsas activas</h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                Crea tu primera bolsa de reciclaje para comenzar a gestionar tu reciclaje
+              </p>
+              <Link href="/crear-qr">
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Crear Primera Bolsa
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bags.map((bag) => (
+              <Card key={bag.id} className="shadow-lg border-0 hover:shadow-xl transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg font-bold">{bag.id}</CardTitle>
+                    <Badge className={getMaterialColor(bag.material)} variant="outline">
+                      {bag.material.charAt(0).toUpperCase() + bag.material.slice(1)}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ubicación:</span>
+                      <span className="font-medium">{bag.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Contacto:</span>
+                      <span className="font-medium">{bag.contact}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Creado:</span>
+                      <span className="font-medium">{formatDate(bag.created)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between pt-2 gap-2">
+                  <Button variant="default" size="sm" className="flex-1 bg-green-600 hover:bg-green-700" asChild>
+                    <Link href={`/bolsa/${bag.id}`}>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Ver QR
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                    onClick={() => handleDelete(bag.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
