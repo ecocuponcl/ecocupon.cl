@@ -5,10 +5,14 @@ import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
-  title: "LATAS X CA$H - EcoCupón Chile",
+  title: "LATAS X CA$H - EcoCupon Chile",
   description: "Plataforma de reciclaje con recompensas. Gana dinero reciclando aluminio y vidrio.",
     generator: 'v0.app'
 }
@@ -26,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es">
-      <body className={`${inter.variable} font-sans min-h-screen flex flex-col antialiased bg-white text-gray-900`}>
+    <html lang="es" className={inter.variable}>
+      <body className="font-sans min-h-screen flex flex-col antialiased bg-white text-gray-900">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

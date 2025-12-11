@@ -3,14 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Download, Share2, Loader2 } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
 import { generateQRCode, downloadQRImage, type QRData } from "@/lib/qr-api"
 
-// Mock data for demonstration
 const mockBagData = {
   id: "ECO-123456",
   material: "aluminio",
@@ -21,14 +15,18 @@ const mockBagData = {
 }
 
 export default function BolsaDetalle({ params }: { params: { id: string } }) {
-  const { toast } = useToast()
-  const [bag, setBag] = useState<any>(null)
+  const [bag, setBag] = useState<typeof mockBagData | null>(null)
   const [loading, setLoading] = useState(true)
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
+  const [toast, setToast] = useState<{ title: string; description: string } | null>(null)
+
+  const showToast = (title: string, description: string) => {
+    setToast({ title, description })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => {
-    // In a real app, you would fetch this data from your API
     setTimeout(() => {
       setBag({
         ...mockBagData,
@@ -76,9 +74,9 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
       case "aluminio":
         return "bg-blue-100 text-blue-800"
       case "vidrio":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-100 text-emerald-800"
       case "mixto":
-        return "bg-purple-100 text-purple-800"
+        return "bg-amber-100 text-amber-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -87,171 +85,180 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
   const downloadQR = () => {
     if (qrImageUrl && bag) {
       downloadQRImage(qrImageUrl, `latas-x-cash-${bag.id}.png`)
-      toast({
-        title: "QR descargado",
-        description: "El código QR ha sido descargado correctamente.",
-      })
+      showToast("QR descargado", "El codigo QR ha sido descargado correctamente.")
     }
   }
 
   const shareQR = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: `LATAS X CA$H - Bolsa ${bag.id}`,
-          text: `Bolsa de reciclaje de ${bag.material} en ${bag.location}. Contacto: ${bag.contact}`,
+          title: `LATAS X CA$H - Bolsa ${bag?.id}`,
+          text: `Bolsa de reciclaje de ${bag?.material} en ${bag?.location}. Contacto: ${bag?.contact}`,
           url: window.location.href,
         })
       } catch (error) {
-        toast({
-          title: "Error al compartir",
-          description: "No se pudo compartir el contenido.",
-        })
+        showToast("Error al compartir", "No se pudo compartir el contenido.")
       }
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast({
-        title: "Enlace copiado",
-        description: "El enlace ha sido copiado al portapapeles.",
-      })
+      showToast("Enlace copiado", "El enlace ha sido copiado al portapapeles.")
     }
   }
 
   if (loading) {
     return (
-      <div className="container mx-auto py-10 px-4">
-        <div className="flex justify-center items-center h-[400px]">
-          <Loader2 className="h-12 w-12 animate-spin text-green-600" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-green-600" />
       </div>
     )
   }
 
   if (!bag) {
     return (
-      <div className="container mx-auto py-10 px-4">
-        <div className="mb-6">
-          <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al inicio
-          </Link>
-        </div>
-
-        <div className="flex flex-col items-center justify-center h-[400px] text-center">
-          <h2 className="text-2xl font-bold mb-2">Bolsa no encontrada</h2>
-          <p className="text-muted-foreground mb-6">La bolsa con ID {params.id} no existe o ha sido eliminada.</p>
-          <Link href="/">
-            <Button>Volver al inicio</Button>
-          </Link>
+      <div className="min-h-screen">
+        <div className="container mx-auto py-10 px-4">
+          <div className="mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al inicio
+            </Link>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[400px] text-center">
+            <h2 className="text-2xl font-bold mb-2 text-gray-900">Bolsa no encontrada</h2>
+            <p className="text-gray-500 mb-6">La bolsa con ID {params.id} no existe o ha sido eliminada.</p>
+            <Link href="/">
+              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-full font-medium transition-colors">
+                Volver al inicio
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <div className="mb-6">
-        <Link href="/mis-bolsas" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a mis bolsas
-        </Link>
+    <div className="min-h-screen">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border-l-4 border-green-500 max-w-sm">
+          <p className="font-semibold text-gray-900">{toast.title}</p>
+          <p className="text-sm text-gray-600">{toast.description}</p>
+        </div>
+      )}
+
+      <div className="bg-gradient-to-b from-yellow-100 via-lime-100 to-green-100 py-6 md:py-8">
+        <div className="container mx-auto px-4">
+          <div className="mb-6">
+            <Link
+              href="/mis-bolsas"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver a mis bolsas
+            </Link>
+          </div>
+          <div className="text-center">
+            <span className="inline-block bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-full mb-4">
+              Detalles de la bolsa
+            </span>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">LATAS X CA$H</h1>
+            <p className="text-gray-600">Informacion detallada y codigo QR</p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col items-center text-center mb-10">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Detalles de la Bolsa</h1>
-        <p className="text-muted-foreground max-w-2xl">Información detallada y código QR de tu bolsa de reciclaje.</p>
-      </div>
+      <div className="container mx-auto px-4 py-8 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
+          {/* Bag Info Card */}
+          <div className="bg-white shadow-lg rounded-2xl p-5 md:p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">{bag.id}</h2>
+              <span
+                className={`${getMaterialColor(bag.material)} text-xs font-medium px-3 py-1 rounded-full capitalize`}
+              >
+                {bag.material}
+              </span>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">{bag.id}</h2>
-                <Badge className={getMaterialColor(bag.material)} variant="outline">
-                  {bag.material.charAt(0).toUpperCase() + bag.material.slice(1)}
-                </Badge>
+            <div className="space-y-4">
+              <div className="flex justify-between py-3 border-b border-gray-100">
+                <span className="text-gray-500">Ubicacion</span>
+                <span className="font-medium text-gray-900">{bag.location}</span>
               </div>
-
-              <div className="space-y-4 mt-4">
-                <div className="grid grid-cols-3 gap-4 py-2 border-b">
-                  <div className="col-span-1 text-muted-foreground">Ubicación</div>
-                  <div className="col-span-2 text-right">{bag.location}</div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 py-2 border-b">
-                  <div className="col-span-1 text-muted-foreground">Contacto</div>
-                  <div className="col-span-2 text-right">{bag.contact}</div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 py-2 border-b">
-                  <div className="col-span-1 text-muted-foreground">Fecha de creación</div>
-                  <div className="col-span-2 text-right">{formatDate(bag.created)}</div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 py-2 border-b">
-                  <div className="col-span-1 text-muted-foreground">Estado</div>
-                  <div className="col-span-2 text-right">
-                    <Badge variant="outline" className="bg-green-100 text-green-800">
-                      Activo
-                    </Badge>
-                  </div>
-                </div>
+              <div className="flex justify-between py-3 border-b border-gray-100">
+                <span className="text-gray-500">Contacto</span>
+                <span className="font-medium text-gray-900">{bag.contact}</span>
+              </div>
+              <div className="flex justify-between py-3 border-b border-gray-100">
+                <span className="text-gray-500">Fecha de creacion</span>
+                <span className="font-medium text-gray-900">{formatDate(bag.created)}</span>
+              </div>
+              <div className="flex justify-between py-3 border-b border-gray-100">
+                <span className="text-gray-500">Estado</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">Activo</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="pt-6 flex flex-col items-center">
-            <h2 className="text-3xl font-bold mb-6 text-green-600">LATAS X CA$H</h2>
-            <div className="bg-white p-4 rounded-lg mb-6 border-4 border-green-500 min-h-[300px] flex items-center justify-center">
+            <div className="mt-8 bg-green-50 p-5 rounded-xl">
+              <h3 className="font-semibold text-gray-900 mb-3">Instrucciones para compradores</h3>
+              <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                <li>Escanea el codigo QR para verificar el contenido</li>
+                <li>Contacta al vendedor usando la informacion de contacto</li>
+                <li>Coordina la recoleccion o entrega del material</li>
+                <li>Realiza el pago segun lo acordado</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* QR Code Card */}
+          <div className="bg-white shadow-lg rounded-2xl p-5 md:p-6 flex flex-col items-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 text-green-600">LATAS X CA$H</h2>
+            <p className="text-sm text-gray-500 mb-6">Escanea para ver detalles</p>
+
+            <div className="bg-white p-3 md:p-4 rounded-2xl mb-6 border-4 border-green-500 shadow-lg min-h-[280px] flex items-center justify-center">
               {qrLoading ? (
                 <Loader2 className="h-12 w-12 animate-spin text-green-600" />
               ) : qrImageUrl ? (
                 <img
                   src={qrImageUrl || "/placeholder.svg"}
                   alt={`QR Code for ${bag.id}`}
-                  width={280}
-                  height={280}
-                  className="w-[280px] h-[280px]"
+                  width={250}
+                  height={250}
+                  className="w-[200px] h-[200px] md:w-[250px] md:h-[250px]"
                 />
               ) : (
-                <p className="text-muted-foreground">Error al cargar QR</p>
+                <p className="text-gray-500">Error al cargar QR</p>
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full justify-center">
-              <Button
-                variant="default"
-                className="bg-green-600 hover:bg-green-700"
+            <div className="text-center mb-6 space-y-1">
+              <h3 className="font-semibold text-lg text-gray-900">{bag.id}</h3>
+              <p className="text-sm text-gray-500 capitalize">Material: {bag.material}</p>
+              <p className="text-sm text-gray-500">{bag.location}</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <button
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 onClick={downloadQR}
                 disabled={!qrImageUrl}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="h-4 w-4" />
                 Descargar QR
-              </Button>
-              <Button variant="outline" onClick={shareQR}>
-                <Share2 className="mr-2 h-4 w-4" />
+              </button>
+              <button
+                className="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                onClick={shareQR}
+              >
+                <Share2 className="h-4 w-4" />
                 Compartir
-              </Button>
+              </button>
             </div>
-
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>Escanea este código QR para acceder a la información de la bolsa.</p>
-              <p className="mt-2">Comparte este código con posibles compradores de reciclaje.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-10 bg-green-50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Instrucciones para compradores</h2>
-        <div className="space-y-4 text-sm">
-          <p>1. Escanea el código QR para verificar el contenido y la ubicación de la bolsa de reciclaje.</p>
-          <p>2. Contacta al vendedor utilizando la información de contacto proporcionada.</p>
-          <p>3. Coordina la recolección o entrega del material reciclable.</p>
-          <p>4. Realiza el pago según lo acordado con el vendedor.</p>
+          </div>
         </div>
       </div>
     </div>
