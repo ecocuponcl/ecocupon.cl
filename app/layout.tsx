@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -18,7 +17,7 @@ export const viewport: Viewport = {
   themeColor: "#22c55e",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
 }
 
 export default function RootLayout({
@@ -27,12 +26,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={inter.variable}>
-      <body className="min-h-screen flex flex-col font-sans antialiased">
+    <html lang="es">
+      <body className={`${inter.variable} font-sans min-h-screen flex flex-col antialiased bg-white text-gray-900`}>
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
-        <Toaster />
       </body>
     </html>
   )
