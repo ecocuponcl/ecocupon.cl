@@ -37,30 +37,11 @@ body {
   }
 }
 
-/* Updated gradients to match EcoCupon exactly */
-.gradient-hero {
-  background: linear-gradient(180deg, #fef9c3 0%, #ecfccb 40%, #bbf7d0 100%);
-}
-
-.gradient-features {
-  background: linear-gradient(180deg, #ecfccb 0%, #d9f99d 100%);
-}
-
-.gradient-stats {
-  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
-}
-
-.gradient-cta {
-  background: linear-gradient(180deg, #fef9c3 0%, #fde68a 100%);
-}
-
-/* Feature card hover effect */
-.feature-card {
-  background: linear-gradient(180deg, #fefce8 0%, #fef9c3 100%);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

@@ -3,13 +3,12 @@
 import Link from "next/link"
 import { Smartphone, Menu, X } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-[#fef9c3]/95 backdrop-blur-md border-b border-yellow-200/50">
+    <header className="sticky top-0 z-50 bg-yellow-100/95 backdrop-blur-md border-b border-yellow-200/50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -50,12 +49,12 @@ export function Header() {
             </Link>
           </nav>
 
-          {/* CTA Button - Updated style */}
+          {/* CTA Button */}
           <div className="hidden md:flex items-center">
-            <Button className="bg-[#1a3a2e] hover:bg-[#143026] text-white rounded-full px-5">
-              <Smartphone className="mr-2 h-4 w-4" />
+            <button className="bg-green-800 hover:bg-green-900 text-white rounded-full px-5 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+              <Smartphone className="h-4 w-4" />
               Descargar App
-            </Button>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -88,10 +87,10 @@ export function Header() {
             >
               Estadísticas
             </Link>
-            <Button className="bg-[#1a3a2e] hover:bg-[#143026] text-white rounded-full w-full">
-              <Smartphone className="mr-2 h-4 w-4" />
+            <button className="bg-green-800 hover:bg-green-900 text-white rounded-full w-full py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+              <Smartphone className="h-4 w-4" />
               Descargar App
-            </Button>
+            </button>
           </nav>
         )}
       </div>

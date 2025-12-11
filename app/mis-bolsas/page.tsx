@@ -4,11 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, QrCode, Trash2, ExternalLink, Plus } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-
 const initialBags = [
   {
     id: "ECO-123456",
@@ -37,8 +32,13 @@ const initialBags = [
 ]
 
 export default function MisBolsas() {
-  const { toast } = useToast()
   const [bags, setBags] = useState(initialBags)
+  const [toast, setToast] = useState<{ title: string; description: string } | null>(null)
+
+  const showToast = (title: string, description: string) => {
+    setToast({ title, description })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -51,33 +51,38 @@ export default function MisBolsas() {
 
   const handleDelete = (id: string) => {
     setBags(bags.filter((bag) => bag.id !== id))
-    toast({
-      title: "Bolsa eliminada",
-      description: `La bolsa ${id} ha sido eliminada correctamente.`,
-    })
+    showToast("Bolsa eliminada", `La bolsa ${id} ha sido eliminada correctamente.`)
   }
 
   const getMaterialColor = (material: string) => {
     switch (material) {
       case "aluminio":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-blue-100 text-blue-800"
       case "vidrio":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200"
+        return "bg-emerald-100 text-emerald-800"
       case "mixto":
-        return "bg-amber-100 text-amber-800 border-amber-200"
+        return "bg-amber-100 text-amber-800"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
   return (
     <div className="min-h-screen">
-      <div className="gradient-hero py-8">
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border-l-4 border-green-500 max-w-sm">
+          <p className="font-semibold text-gray-900">{toast.title}</p>
+          <p className="text-sm text-gray-600">{toast.description}</p>
+        </div>
+      )}
+
+      <div className="bg-gradient-to-b from-yellow-100 via-lime-100 to-green-100 py-6 md:py-8">
         <div className="container mx-auto px-4">
           <div className="mb-6">
             <Link
               href="/"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al inicio
@@ -88,85 +93,89 @@ export default function MisBolsas() {
             <span className="inline-block bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-full mb-4">
               Gestiona tu reciclaje
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">LATAS X CA$H</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Mis Bolsas de Reciclaje</p>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">LATAS X CA$H</h1>
+            <p className="text-gray-600">Mis Bolsas de Reciclaje</p>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 py-8 md:py-10">
         <div className="flex justify-end mb-6">
           <Link href="/crear-qr">
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="mr-2 h-4 w-4" />
+            <button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-5 py-2.5 font-medium flex items-center gap-2 transition-colors">
+              <Plus className="h-4 w-4" />
               Crear Nueva Bolsa
-            </Button>
+            </button>
           </Link>
         </div>
 
         {bags.length === 0 ? (
-          <Card className="border-dashed border-2 shadow-none">
-            <CardContent className="pt-6 flex flex-col items-center justify-center text-center p-12">
-              <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-6">
-                <QrCode className="h-10 w-10 text-muted-foreground" />
+          <div className="border-2 border-dashed border-gray-300 rounded-2xl">
+            <div className="flex flex-col items-center justify-center text-center p-10 md:p-12">
+              <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mb-6">
+                <QrCode className="h-10 w-10 text-gray-400" />
               </div>
               <h3 className="font-semibold text-lg mb-2">No tienes bolsas activas</h3>
-              <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+              <p className="text-sm text-gray-500 mb-6 max-w-sm">
                 Crea tu primera bolsa de reciclaje para comenzar a gestionar tu reciclaje
               </p>
               <Link href="/crear-qr">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  <Plus className="mr-2 h-4 w-4" />
+                <button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-5 py-2.5 font-medium flex items-center gap-2 transition-colors">
+                  <Plus className="h-4 w-4" />
                   Crear Primera Bolsa
-                </Button>
+                </button>
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             {bags.map((bag) => (
-              <Card key={bag.id} className="shadow-lg border-0 hover:shadow-xl transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-bold">{bag.id}</CardTitle>
-                    <Badge className={getMaterialColor(bag.material)} variant="outline">
-                      {bag.material.charAt(0).toUpperCase() + bag.material.slice(1)}
-                    </Badge>
+              <div
+                key={bag.id}
+                className="bg-white shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow"
+              >
+                <div className="p-5 md:p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">{bag.id}</h3>
+                    <span
+                      className={`${getMaterialColor(bag.material)} text-xs font-medium px-2.5 py-1 rounded-full capitalize`}
+                    >
+                      {bag.material}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 text-sm">
+
+                  <div className="space-y-2 text-sm mb-5">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ubicación:</span>
-                      <span className="font-medium">{bag.location}</span>
+                      <span className="text-gray-500">Ubicación:</span>
+                      <span className="font-medium text-gray-900">{bag.location}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Contacto:</span>
-                      <span className="font-medium">{bag.contact}</span>
+                      <span className="text-gray-500">Contacto:</span>
+                      <span className="font-medium text-gray-900">{bag.contact}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Creado:</span>
-                      <span className="font-medium">{formatDate(bag.created)}</span>
+                      <span className="text-gray-500">Creado:</span>
+                      <span className="font-medium text-gray-900">{formatDate(bag.created)}</span>
                     </div>
                   </div>
-                </CardContent>
-                <CardFooter className="flex justify-between pt-2 gap-2">
-                  <Button variant="default" size="sm" className="flex-1 bg-green-600 hover:bg-green-700" asChild>
-                    <Link href={`/bolsa/${bag.id}`}>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Ver QR
+
+                  <div className="flex gap-2">
+                    <Link href={`/bolsa/${bag.id}`} className="flex-1">
+                      <button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors text-sm">
+                        <ExternalLink className="h-4 w-4" />
+                        Ver QR
+                      </button>
                     </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 bg-transparent"
-                    onClick={() => handleDelete(bag.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
+                    <button
+                      className="px-3 py-2 border border-gray-200 hover:bg-red-50 hover:border-red-200 text-red-500 rounded-lg transition-colors"
+                      onClick={() => handleDelete(bag.id)}
+                      aria-label="Eliminar bolsa"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
