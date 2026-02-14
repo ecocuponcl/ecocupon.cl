@@ -1,6 +1,3 @@
-// NoCodeAPI QR Code Generator service
-const NOCODE_API_URL = "https://v1.nocodeapi.com/ecocupon/qrCode/CMcuxKjFowzJykHM/dataurl"
-
 export interface QRData {
   id: string
   material: string
@@ -11,25 +8,24 @@ export interface QRData {
 }
 
 export async function generateQRCode(data: QRData): Promise<string> {
-  const myHeaders = new Headers()
-  myHeaders.append("Content-Type", "application/json")
-
-  const requestOptions: RequestInit = {
-    method: "POST",
-    headers: myHeaders,
-    redirect: "follow",
-    body: JSON.stringify(data),
-  }
-
   try {
-    const response = await fetch(NOCODE_API_URL, requestOptions)
+    const response = await fetch("/api/generate-qr", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || "Error al generar QR")
+    }
+
     const result = await response.json()
 
-    // NoCodeAPI returns the QR code as a data URL
     if (result.url) {
       return result.url
     }
-    throw new Error("No QR code URL in response")
+    throw new Error("No se recibio el QR")
   } catch (error) {
     console.error("Error generating QR code:", error)
     throw error

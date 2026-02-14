@@ -1,10 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import { ArrowLeft, Download, Copy, QrCode, Loader2 } from "lucide-react"
 import { generateQRCode, downloadQRImage, type QRData } from "@/lib/qr-api"
+
+function sanitize(input: string, maxLength = 100): string {
+  return input.replace(/<[^>]*>/g, "").replace(/[<>"'&]/g, "").trim().slice(0, maxLength)
+}
 
 export default function CrearQR() {
   const [formData, setFormData] = useState({
@@ -24,10 +28,10 @@ export default function CrearQR() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: sanitize(value, name === "notes" ? 200 : 100) }))
+  }, [])
 
   const handleRadioChange = (value: string) => {
     setFormData((prev) => ({ ...prev, material: value }))
