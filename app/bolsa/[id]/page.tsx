@@ -14,7 +14,8 @@ const mockBagData = {
   status: "active",
 }
 
-export default function BolsaDetalle({ params }: { params: { id: string } }) {
+export default function BolsaDetalle({ params }: { params: Promise<{ id: string }> }) {
+  const [bagId, setBagId] = useState<string>("")
   const [bag, setBag] = useState<typeof mockBagData | null>(null)
   const [loading, setLoading] = useState(true)
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null)
@@ -27,14 +28,16 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
   }
 
   useEffect(() => {
-    setTimeout(() => {
+    params.then((resolved) => {
+      const safeId = resolved.id.replace(/[^a-zA-Z0-9\-_]/g, "").slice(0, 50)
+      setBagId(safeId)
       setBag({
         ...mockBagData,
-        id: params.id,
+        id: safeId,
       })
       setLoading(false)
-    }, 500)
-  }, [params.id])
+    })
+  }, [params])
 
   useEffect(() => {
     async function loadQR() {
@@ -129,7 +132,7 @@ export default function BolsaDetalle({ params }: { params: { id: string } }) {
           </div>
           <div className="flex flex-col items-center justify-center h-[400px] text-center">
             <h2 className="text-2xl font-bold mb-2 text-gray-900">Bolsa no encontrada</h2>
-            <p className="text-gray-500 mb-6">La bolsa con ID {params.id} no existe o ha sido eliminada.</p>
+            <p className="text-gray-500 mb-6">La bolsa con ID {bagId} no existe o ha sido eliminada.</p>
             <Link href="/">
               <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-full font-medium transition-colors">
                 Volver al inicio

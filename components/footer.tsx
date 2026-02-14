@@ -100,7 +100,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/10 text-center">
-          <p className="text-sm text-gray-400">2024 EcoCupon. Todos los derechos reservados.</p>
+          <p className="text-sm text-gray-400">&copy; 2024 - 2026 EcoCupon. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
