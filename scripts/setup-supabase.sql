@@ -5,8 +5,14 @@
 -- https://supabase.com/dashboard/project/uyxvzztnsvfcqmgkrnol/sql/new
 -- ============================================
 
+-- Drop existing tables if they exist (to fix type mismatches)
+DROP TABLE IF EXISTS product_specs CASCADE;
+DROP TABLE IF EXISTS knasta_prices CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+
 -- 1. Create categories table
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -15,7 +21,7 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- 2. Create products table
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -27,7 +33,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- 3. Create product_specs table
-CREATE TABLE IF NOT EXISTS product_specs (
+CREATE TABLE product_specs (
   id SERIAL PRIMARY KEY,
   product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -35,7 +41,7 @@ CREATE TABLE IF NOT EXISTS product_specs (
 );
 
 -- 4. Create knasta_prices table
-CREATE TABLE IF NOT EXISTS knasta_prices (
+CREATE TABLE knasta_prices (
   id SERIAL PRIMARY KEY,
   product_id TEXT NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
   price INTEGER NOT NULL,
@@ -50,13 +56,6 @@ ALTER TABLE product_specs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knasta_prices ENABLE ROW LEVEL SECURITY;
 
 -- 6. Create policies for public read access
--- Drop existing policies first (if any)
-DROP POLICY IF EXISTS "Public read access" ON categories;
-DROP POLICY IF EXISTS "Public read access" ON products;
-DROP POLICY IF EXISTS "Public read access" ON product_specs;
-DROP POLICY IF EXISTS "Public read access" ON knasta_prices;
-
--- Create fresh policies
 CREATE POLICY "Public read access" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON products FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON product_specs FOR SELECT USING (true);
@@ -69,8 +68,7 @@ VALUES
   ('fashion', 'Moda', 'fashion', 'Ropa, calzado y accesorios', '/placeholder.svg?height=400&width=600'),
   ('home', 'Hogar', 'home', 'Productos para el hogar y decoracion', '/placeholder.svg?height=400&width=600'),
   ('books', 'Libros', 'books', 'Libros y material de lectura', '/placeholder.svg?height=400&width=600'),
-  ('office', 'Oficina', 'office', 'Articulos de oficina y papeleria', '/placeholder.svg?height=400&width=600')
-ON CONFLICT (id) DO NOTHING;
+  ('office', 'Oficina', 'office', 'Articulos de oficina y papeleria', '/placeholder.svg?height=400&width=600');
 
 -- 8. Insert products
 INSERT INTO products (id, name, description, price, image, category_id)
@@ -86,8 +84,7 @@ VALUES
   ('macbook-air', 'MacBook Air M2', 'Laptop Apple MacBook Air M2 8GB 256GB SSD', 1099990, '/placeholder.svg?height=400&width=400', 'technology'),
   ('sony-wh1000xm5', 'Sony WH-1000XM5', 'Audifonos inalambricos con cancelacion de ruido', 349990, '/placeholder.svg?height=400&width=400', 'technology'),
   ('nike-air-max', 'Nike Air Max 90', 'Zapatillas Nike Air Max 90 para hombre', 129990, '/placeholder.svg?height=400&width=400', 'fashion'),
-  ('dyson-v11', 'Dyson V11 Absolute', 'Aspiradora inalambrica Dyson V11', 699990, '/placeholder.svg?height=400&width=400', 'home')
-ON CONFLICT (id) DO NOTHING;
+  ('dyson-v11', 'Dyson V11 Absolute', 'Aspiradora inalambrica Dyson V11', 699990, '/placeholder.svg?height=400&width=400', 'home');
 
 -- 9. Insert knasta prices
 INSERT INTO knasta_prices (product_id, price, url)
@@ -124,11 +121,10 @@ VALUES
   ('latam-base-cama', 'Modelo', 'Zen'),
   ('bic-cristal', 'Marca', 'Bic'),
   ('bic-cristal', 'Color', 'Negro'),
-  ('bic-cristal', 'Cantidad', '50 unidades')
-ON CONFLICT (id) DO NOTHING;
+  ('bic-cristal', 'Cantidad', '50 unidades');
 
 -- ============================================
--- Verification queries (optional)
+-- Verification queries
 -- ============================================
 -- SELECT COUNT(*) FROM categories;
 -- SELECT COUNT(*) FROM products;
