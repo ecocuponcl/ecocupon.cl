@@ -1,17 +1,8 @@
--- ============================================
--- EcoCupon Database Setup
--- ============================================
--- Execute this SQL in the Supabase Dashboard:
--- https://supabase.com/dashboard/project/uyxvzztnsvfcqmgkrnol/sql/new
--- ============================================
-
--- Drop existing tables if they exist (to fix type mismatches)
 DROP TABLE IF EXISTS product_specs CASCADE;
 DROP TABLE IF EXISTS knasta_prices CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
 
--- 1. Create categories table
 CREATE TABLE categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -20,7 +11,6 @@ CREATE TABLE categories (
   image TEXT
 );
 
--- 2. Create products table
 CREATE TABLE products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -32,7 +22,6 @@ CREATE TABLE products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Create product_specs table
 CREATE TABLE product_specs (
   id SERIAL PRIMARY KEY,
   product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -40,7 +29,6 @@ CREATE TABLE product_specs (
   value TEXT NOT NULL
 );
 
--- 4. Create knasta_prices table
 CREATE TABLE knasta_prices (
   id SERIAL PRIMARY KEY,
   product_id TEXT NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
@@ -49,30 +37,24 @@ CREATE TABLE knasta_prices (
   last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. Enable Row Level Security
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_specs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knasta_prices ENABLE ROW LEVEL SECURITY;
 
--- 6. Create policies for public read access
 CREATE POLICY "Public read access" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON products FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON product_specs FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON knasta_prices FOR SELECT USING (true);
 
--- 7. Insert categories
-INSERT INTO categories (id, name, slug, description, image)
-VALUES
+INSERT INTO categories (id, name, slug, description, image) VALUES
   ('technology', 'Tecnologia', 'technology', 'Productos tecnologicos y electronicos', '/placeholder.svg?height=400&width=600'),
   ('fashion', 'Moda', 'fashion', 'Ropa, calzado y accesorios', '/placeholder.svg?height=400&width=600'),
   ('home', 'Hogar', 'home', 'Productos para el hogar y decoracion', '/placeholder.svg?height=400&width=600'),
   ('books', 'Libros', 'books', 'Libros y material de lectura', '/placeholder.svg?height=400&width=600'),
   ('office', 'Oficina', 'office', 'Articulos de oficina y papeleria', '/placeholder.svg?height=400&width=600');
 
--- 8. Insert products
-INSERT INTO products (id, name, description, price, image, category_id)
-VALUES
+INSERT INTO products (id, name, description, price, image, category_id) VALUES
   ('skechers-edgeride', 'Zapatilla Urbana Skechers Edgeride Mujer', 'Zapatillas urbanas comodas y ligeras para uso diario.', 39990, '/placeholder.svg?height=400&width=400', 'fashion'),
   ('blackie-books', 'Blackie Books - Blackwater', 'Libro Blackie Books - Blackwater', 12836, '/placeholder.svg?height=400&width=400', 'books'),
   ('bic-cristal', 'Lapiz Pasta Negro Bic Cristal', 'Lapiz Pasta Negro Bic Cristal 50 Unidades', 22990, '/placeholder.svg?height=400&width=400', 'office'),
@@ -86,9 +68,7 @@ VALUES
   ('nike-air-max', 'Nike Air Max 90', 'Zapatillas Nike Air Max 90 para hombre', 129990, '/placeholder.svg?height=400&width=400', 'fashion'),
   ('dyson-v11', 'Dyson V11 Absolute', 'Aspiradora inalambrica Dyson V11', 699990, '/placeholder.svg?height=400&width=400', 'home');
 
--- 9. Insert knasta prices
-INSERT INTO knasta_prices (product_id, price, url)
-VALUES
+INSERT INTO knasta_prices (product_id, price, url) VALUES
   ('skechers-edgeride', 34990, 'https://knasta.cl/producto/zapatilla-urbana-skechers-edgeride-mujer'),
   ('blackie-books', 10528, 'https://knasta.cl/producto/blackie-books-blackwater'),
   ('bic-cristal', 13990, 'https://knasta.cl/producto/lapiz-pasta-negro-bic-cristal'),
@@ -106,9 +86,7 @@ ON CONFLICT (product_id) DO UPDATE SET
   url = EXCLUDED.url,
   last_updated = NOW();
 
--- 10. Insert product specs
-INSERT INTO product_specs (product_id, name, value)
-VALUES
+INSERT INTO product_specs (product_id, name, value) VALUES
   ('skechers-edgeride', 'Tipo', 'Zapatilla Urbana'),
   ('skechers-edgeride', 'Genero', 'Mujer'),
   ('skechers-edgeride', 'Marca', 'Skechers'),
@@ -122,10 +100,3 @@ VALUES
   ('bic-cristal', 'Marca', 'Bic'),
   ('bic-cristal', 'Color', 'Negro'),
   ('bic-cristal', 'Cantidad', '50 unidades');
-
--- ============================================
--- Verification queries
--- ============================================
--- SELECT COUNT(*) FROM categories;
--- SELECT COUNT(*) FROM products;
--- SELECT COUNT(*) FROM knasta_prices;
