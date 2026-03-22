@@ -50,10 +50,17 @@ ALTER TABLE product_specs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knasta_prices ENABLE ROW LEVEL SECURITY;
 
 -- 6. Create policies for public read access
-CREATE POLICY IF NOT EXISTS "Public read access" ON categories FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Public read access" ON products FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Public read access" ON product_specs FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Public read access" ON knasta_prices FOR SELECT USING (true);
+-- Drop existing policies first (if any)
+DROP POLICY IF EXISTS "Public read access" ON categories;
+DROP POLICY IF EXISTS "Public read access" ON products;
+DROP POLICY IF EXISTS "Public read access" ON product_specs;
+DROP POLICY IF EXISTS "Public read access" ON knasta_prices;
+
+-- Create fresh policies
+CREATE POLICY "Public read access" ON categories FOR SELECT USING (true);
+CREATE POLICY "Public read access" ON products FOR SELECT USING (true);
+CREATE POLICY "Public read access" ON product_specs FOR SELECT USING (true);
+CREATE POLICY "Public read access" ON knasta_prices FOR SELECT USING (true);
 
 -- 7. Insert categories
 INSERT INTO categories (id, name, slug, description, image)
