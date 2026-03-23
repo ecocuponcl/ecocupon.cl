@@ -33,7 +33,7 @@ async function getDiscountedProducts() {
 
   const { data: products, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, category:categories(name, slug), knasta_prices(*)")
     .order("created_at", { ascending: false })
 
   if (error || !products) {
@@ -41,48 +41,31 @@ async function getDiscountedProducts() {
     return []
   }
 
-  const enriched = await Promise.all(
-    (products as Product[]).map(async (p) => {
-      const { data: cat } = await supabase
-        .from("categories")
-        .select("name, slug")
-        .eq("id", p.category_id)
-        .single()
-
-      const { data: prices } = await supabase
-        .from("knasta_prices")
-        .select("*")
-        .eq("product_id", p.id)
-
-      const knastaPrice = prices && prices.length > 0 ? (prices[0] as KnastaPrice) : null
-
-      return {
-        ...p,
-        knastaPrice,
-        category: (cat as { name: string; slug: string }) || { name: "General", slug: "all" },
-      }
-    }),
-  )
-
-  return enriched.filter((p): p is EnrichedProduct => p.knastaPrice !== null && p.knastaPrice.price < p.price)
+  return (products as any[]).filter((p) => {
+    const knastaPrice = p.knasta_prices?.[0]
+    return knastaPrice && knastaPrice.price < p.price
+  }).map((p) => ({
+    ...p,
+    knastaPrice: p.knasta_prices?.[0] || null,
+    category: p.category || { name: "General", slug: "all" },
+  })) as EnrichedProduct[]
 }
 
-const categoryIcons = [
-  { slug: "all", label: "Ofertas de hoy", icon: Zap, color: "bg-primary", hover: "hover:bg-primary/90", desc: "Las bajadas de precio de las ultimas horas" },
-  { slug: "technology", label: "Tecnologia", icon: Monitor, color: "bg-blue-600", hover: "hover:bg-blue-700", desc: "Las mejores ofertas en tecnologia" },
-  { slug: "fashion", label: "Moda", icon: Shirt, color: "bg-rose-600", hover: "hover:bg-rose-700", desc: "Ofertas en ropa y calzado" },
-  { slug: "home", label: "Hogar", icon: Home, color: "hover:bg-amber-700", hover2: "bg-amber-600", desc: "Descuentos en productos para el hogar" },
-]
+const CATEGORY_ICONS = [
+  { slug: "all", label: "Ofertas de hoy", icon: Zap, color: "bg-primary", desc: "Las bajadas de precio de las últimas horas" },
+  { slug: "technology", label: "Tecnología", icon: Monitor, color: "bg-blue-600", desc: "Las mejores ofertas en tecnología" },
+  { slug: "fashion", label: "Moda", icon: Shirt, color: "bg-rose-600", desc: "Ofertas en ropa y calzado" },
+  { slug: "home", label: "Hogar", icon: Home, color: "bg-amber-600", desc: "Descuentos en productos para el hogar" },
+] as const
 
 export default async function HomePage() {
   const [categories, products] = await Promise.all([getCategories(), getDiscountedProducts()])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:py-8">
-      {/* Hero categories */}
       <section className="mb-6 sm:mb-10">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {categoryIcons.map((c) => (
+          {CATEGORY_ICONS.map((c) => (
             <Link key={c.slug} href={`/category/${c.slug}`}>
               <Card className="group h-full overflow-hidden border-0 bg-foreground text-background transition-shadow hover:shadow-lg">
                 <CardContent className="flex h-full flex-col p-3 sm:p-5">
@@ -103,7 +86,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Product grid */}
       <section className="mb-6 sm:mb-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold sm:text-2xl">Mejores Ofertas</h2>
@@ -162,36 +144,33 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Category listing */}
-      {categories.length > 0 && (
-        <section>
-          <h2 className="mb-4 text-lg font-bold sm:text-2xl">Categorias</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/category/${cat.slug}`}>
-                <Card className="group overflow-hidden transition-shadow hover:shadow-md">
-                  <div className="relative h-32 w-full bg-muted sm:h-44">
-                    <Image
-                      src={cat.image || "/placeholder.svg?height=300&width=500"}
-                      alt={cat.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
+      <section>
+        <h2 className="mb-4 text-lg font-bold sm:text-2xl">Categorías</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => (
+            <Link key={cat.id} href={`/category/${cat.slug}`}>
+              <Card className="group overflow-hidden transition-shadow hover:shadow-md">
+                <div className="relative h-32 w-full bg-muted sm:h-44">
+                  <Image
+                    src={cat.image || "/placeholder.svg?height=300&width=500"}
+                    alt={cat.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                </div>
+                <CardContent className="flex items-center justify-between p-3 sm:p-4">
+                  <div>
+                    <h3 className="font-semibold sm:text-lg">{cat.name}</h3>
+                    <p className="text-xs text-muted-foreground sm:text-sm">{cat.description}</p>
                   </div>
-                  <CardContent className="flex items-center justify-between p-3 sm:p-4">
-                    <div>
-                      <h3 className="font-semibold sm:text-lg">{cat.name}</h3>
-                      <p className="text-xs text-muted-foreground sm:text-sm">{cat.description}</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
