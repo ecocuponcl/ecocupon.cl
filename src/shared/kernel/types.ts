@@ -41,35 +41,6 @@ export interface PaginationOptions {
 }
 
 /**
- * Resultado paginado
- */
-export interface PagedResult<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
-
-/**
- * Crea un resultado paginado
- */
-export function createPagedResult<T>(
-  data: T[],
-  total: number,
-  page: number,
-  limit: number
-): PagedResult<T> {
-  return {
-    data,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  }
-}
-
-/**
  * Tipo para IDs genéricos
  */
 export type ID = string

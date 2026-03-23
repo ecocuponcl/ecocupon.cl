@@ -6,15 +6,20 @@
  * @domain catalog
  */
 
-// Entidades
+// Entidades y Value Objects
 export {
   Category,
-  CategoryId,
-  CategorySlug,
-  ImageUrl,
   CategoryFactory,
   CategoryMapper,
+  CategorySlugVO,
 } from './entities/category'
 
-// Repositorios
-export { ICategoryRepository } from './repositories/category-repository'
+// Types puros
+export type {
+  Category as CategoryType,
+  CategoryId,
+  CategorySlug,
+} from './entities/category'
+
+// Repositorios (solo tipos)
+export type { ICategoryRepository } from './repositories/category-repository'

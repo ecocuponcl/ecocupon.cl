@@ -15,7 +15,7 @@ export interface Category {
   readonly name: string
   readonly slug: CategorySlug
   readonly description: string | null
-  readonly imageUrl: ImageUrl | null
+  readonly imageUrl: string | null
   readonly createdAt: Date
 }
 
@@ -23,7 +23,7 @@ export interface Category {
  * Value Object: CategorySlug
  * Asegura que el slug tenga formato válido
  */
-export class CategorySlug {
+export class CategorySlugVO {
   constructor(readonly value: string) {
     if (!this.isValidSlug(value)) {
       throw new Error('Slug inválido. Solo se permiten letras minúsculas, números y guiones')
@@ -38,49 +38,21 @@ export class CategorySlug {
     return this.value
   }
 
-  static create(value: string): CategorySlug {
-    return new CategorySlug(value)
+  static create(value: string): CategorySlugVO {
+    return new CategorySlugVO(value)
   }
 
   /**
    * Genera un slug desde un nombre
    */
-  static fromName(name: string): CategorySlug {
+  static fromName(name: string): CategorySlugVO {
     const slug = name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remove accents
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
-    return new CategorySlug(slug)
-  }
-}
-
-/**
- * Value Object: ImageUrl para categorías
- */
-export class ImageUrl {
-  constructor(readonly value: string) {
-    if (!this.isValidUrl(value)) {
-      throw new Error('URL de imagen inválida')
-    }
-  }
-
-  private isValidUrl(url: string): boolean {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  toString(): string {
-    return this.value
-  }
-
-  static create(value: string): ImageUrl {
-    return new ImageUrl(value)
+    return new CategorySlugVO(slug)
   }
 }
 
@@ -99,9 +71,9 @@ export class CategoryFactory {
     return {
       id: params.id,
       name: params.name,
-      slug: CategorySlug.create(params.slug).value,
+      slug: params.slug,
       description: params.description ?? null,
-      imageUrl: params.imageUrl ? ImageUrl.create(params.imageUrl) : null,
+      imageUrl: params.imageUrl ?? null,
       createdAt: params.createdAt ?? new Date(),
     }
   }
@@ -148,7 +120,7 @@ export class CategoryMapper {
       name: category.name,
       slug: category.slug,
       description: category.description,
-      image: category.imageUrl?.value ?? null,
+      image: category.imageUrl,
       created_at: category.createdAt.toISOString(),
     }
   }

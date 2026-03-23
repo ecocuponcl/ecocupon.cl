@@ -7,9 +7,9 @@
  * @infrastructure supabase
  */
 
-import type { Database } from '@/lib/database.types'
-import type { Product, ProductMapper } from '../../entities/product'
-import type { IProductRepository, ProductFilter, PagedResult } from '../product-repository'
+import { ProductMapper } from '@/domains/product/entities/product'
+import type { Product } from '@/domains/product/entities/product'
+import type { IProductRepository, ProductFilter, PagedResult } from '@/domains/product/repositories/product-repository'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
 

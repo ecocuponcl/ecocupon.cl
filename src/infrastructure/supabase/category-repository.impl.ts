@@ -7,10 +7,13 @@
  * @infrastructure supabase
  */
 
-import type { Category, CategoryMapper } from '../../entities/category'
-import type { ICategoryRepository } from '../category-repository'
+import { CategoryMapper } from '@/domains/catalog/entities/category'
+import type { Category } from '@/domains/catalog/entities/category'
+import type { ICategoryRepository } from '@/domains/catalog/repositories/category-repository'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
+
+type SupabaseClient = ReturnType<typeof createServerClient>
 
 /**
  * Implementación del repositorio de categorías con Supabase
@@ -18,7 +21,7 @@ import { createClient as createBrowserClient } from '@/lib/supabase/client'
 export class SupabaseCategoryRepository implements ICategoryRepository {
   private tableName = 'categories'
 
-  constructor(private getClient: () => Promise<ReturnType<typeof createServerClient>>) {}
+  constructor(private getClient: () => Promise<SupabaseClient>) {}
 
   /**
    * Factory method para crear repositorio para server

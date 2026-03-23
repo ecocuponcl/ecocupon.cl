@@ -9,11 +9,49 @@
  * ```
  */
 
-// Product Domain
-export * from './product/index'
+// Product Domain (core exports)
+export {
+  Product,
+  Price,
+  ImageUrl,
+  ProductFactory,
+  ProductMapper,
+} from './product/index'
+
+export type {
+  ProductId,
+  CategoryId,
+  IProductRepository,
+  ProductFilter,
+  PagedResult,
+} from './product/index'
 
 // Catalog Domain
-export * from './catalog/index'
+export {
+  Category,
+  CategoryFactory,
+  CategoryMapper,
+  CategorySlugVO,
+} from './catalog/index'
 
-// Pricing Domain
-export * from './pricing/index'
+export type {
+  CategoryId as CatalogCategoryId,
+  CategorySlug,
+  ICategoryRepository,
+} from './catalog/index'
+
+// Pricing Domain (con aliases para evitar conflictos)
+export {
+  KnastaPrice,
+  KnastaPriceId,
+  ProductUrl,
+  KnastaPriceFactory,
+  KnastaPriceMapper,
+  PriceComparisonService,
+} from './pricing/index'
+
+export type {
+  PricingProductId,
+  PricingPrice,
+  PricingKnastaPriceId,
+} from './pricing/index'

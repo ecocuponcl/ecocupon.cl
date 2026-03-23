@@ -6,19 +6,24 @@
  * @domain product
  */
 
-// Entidades
+// Entidades y Value Objects
 export {
   Product,
-  ProductId,
-  CategoryId,
   Price,
   ImageUrl,
   ProductFactory,
   ProductMapper,
 } from './entities/product'
 
-// Repositorios
-export {
+// Types puros
+export type {
+  Product as ProductType,
+  ProductId,
+  CategoryId,
+} from './entities/product'
+
+// Repositorios (solo tipos)
+export type {
   IProductRepository,
   ProductFilter,
   PagedResult,
