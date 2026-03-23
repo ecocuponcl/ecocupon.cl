@@ -34,6 +34,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
     ],
   },
   async headers() {
@@ -73,7 +81,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' vercel.live",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' blob: data: https://images.unsplash.com https://placehold.co https://cdn.jsdelivr.net https://raw.githubusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://**.ecocupon.cl",
+              "img-src 'self' blob: data: https://images.unsplash.com https://placehold.co https://cdn.jsdelivr.net https://raw.githubusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://**.ecocupon.cl https://**.supabase.co",
               "font-src 'self' data:",
               "connect-src 'self' https://**.supabase.co https://**.supabase.realtime wss://**.supabase.realtime https://wa.me https://vercel.live https://analytics.vercel.com",
               "frame-src 'none'",

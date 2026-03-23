@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Edit, MoreHorizontal, Trash } from "lucide-react"
+import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { CategoryFormModal } from "@/components/admin/category-form-modal"
 import type { Database } from "@/lib/database.types"
 
 type CategoryWithCount = Database["public"]["Tables"]["categories"]["Row"] & {
@@ -18,6 +19,8 @@ export function CategoriesTable() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categories, setCategories] = useState<CategoryWithCount[]>([])
   const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<CategoryWithCount | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -63,7 +66,17 @@ export function CategoriesTable() {
       (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
-  const deleteCategory = async (id: number) => {
+  const handleEdit = (category: CategoryWithCount) => {
+    setEditingCategory(category)
+    setFormOpen(true)
+  }
+
+  const handleAddNew = () => {
+    setEditingCategory(null)
+    setFormOpen(true)
+  }
+
+  const deleteCategory = async (id: string) => {
     const { error } = await supabase.from("categories").delete().eq("id", id)
 
     if (error) {
@@ -82,6 +95,10 @@ export function CategoriesTable() {
     }
   }
 
+  function refreshCategories() {
+    fetchCategories()
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -91,7 +108,10 @@ export function CategoriesTable() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button>Añadir Categoría</Button>
+        <Button onClick={handleAddNew}>
+          <Plus className="h-4 w-4 mr-2" />
+          Añadir Categoría
+        </Button>
       </div>
 
       <div className="rounded-md border">
@@ -132,11 +152,14 @@ export function CategoriesTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(category)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => deleteCategory(category.id)}>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => deleteCategory(category.id)}
+                        >
                           <Trash className="h-4 w-4 mr-2" />
                           Eliminar
                         </DropdownMenuItem>
@@ -149,6 +172,13 @@ export function CategoriesTable() {
           </TableBody>
         </Table>
       </div>
+
+      <CategoryFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        category={editingCategory}
+        onSuccess={refreshCategories}
+      />
     </div>
   )
 }

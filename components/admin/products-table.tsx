@@ -6,9 +6,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Edit, MoreHorizontal, Trash } from "lucide-react"
+import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { ProductFormModal } from "@/components/admin/product-form-modal"
 import type { Database } from "@/lib/database.types"
 
 type ProductWithRelations = Database["public"]["Tables"]["products"]["Row"] & {
@@ -21,6 +22,8 @@ export function ProductsTable() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [products, setProducts] = useState<ProductWithRelations[]>([])
   const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -53,6 +56,10 @@ export function ProductsTable() {
     setLoading(false)
   }
 
+  function refreshProducts() {
+    fetchProducts()
+  }
+
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,6 +78,16 @@ export function ProductsTable() {
     } else {
       setSelectedProducts(filteredProducts.map((product) => product.id))
     }
+  }
+
+  const handleEdit = (product: ProductWithRelations) => {
+    setEditingProduct(product)
+    setFormOpen(true)
+  }
+
+  const handleAddNew = () => {
+    setEditingProduct(null)
+    setFormOpen(true)
   }
 
   const deleteSelectedProducts = async () => {
@@ -111,6 +128,10 @@ export function ProductsTable() {
               Eliminar ({selectedProducts.length})
             </Button>
           )}
+          <Button onClick={handleAddNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            Añadir Producto
+          </Button>
         </div>
       </div>
 
@@ -195,7 +216,7 @@ export function ProductsTable() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(product)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
@@ -213,6 +234,13 @@ export function ProductsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <ProductFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        product={editingProduct}
+        onSuccess={refreshProducts}
+      />
     </div>
   )
 }
