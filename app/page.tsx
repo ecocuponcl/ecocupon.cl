@@ -76,7 +76,7 @@ export default async function HomePage() {
           <p className="py-12 text-center text-muted-foreground">No hay productos con descuento disponibles.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {products.map((product) => {
+            {products.map((product, index) => {
               const knastaPrice = product.knastaPrices?.[0]?.price
               const discount = knastaPrice
                 ? PriceComparisonService.calculateSavings(
@@ -95,6 +95,7 @@ export default async function HomePage() {
                         fill
                         className="object-contain p-3"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        priority={index < 4}
                       />
                       {discount > 0 && (
                         <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground">
