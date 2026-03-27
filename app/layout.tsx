@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import '@/styles/globals.css'
+import './globals.css'
+import { SiteHeader } from '@/components/site-header'
 
 export const metadata: Metadata = {
   title: 'EcoCupon.cl',
@@ -18,7 +19,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#16a34a',
+  themeColor: '#10b981',
 }
 
 export default function RootLayout({
@@ -30,21 +31,20 @@ export default function RootLayout({
     <html lang="es">
       <head>
         <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/lucide-static@0.487.0/font/lucide.css"
-        />
-        <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
         <link
           rel="preconnect"
-          href="https://cdn.jsdelivr.net"
+          href="https://fonts.googleapis.com"
           crossOrigin="anonymous"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SiteHeader />
+        {children}
+      </body>
     </html>
   )
 }

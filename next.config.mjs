@@ -19,7 +19,13 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
@@ -64,20 +70,22 @@ const nextConfig = {
         },
         {
           key: 'Content-Security-Policy',
-          value: [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
-            "img-src 'self' blob: data: https://*.supabase.co",
-            "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self' https://*.supabase.co https://*.supabase.realtime wss://*.supabase.realtime",
-            "frame-src 'none'",
-            "object-src 'none'",
-            "base-uri 'self'",
-            "form-action 'self'",
-            "frame-ancestors 'none'",
-            "upgrade-insecure-requests",
-          ].join('; '),
+          value: (() => {
+            const cspHeader = `
+              default-src 'self';
+              script-src 'self' 'unsafe-eval' 'unsafe-inline' *.supabase.co;
+              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+              img-src 'self' blob: data: *.supabase.co https://picsum.photos;
+              font-src 'self' https://fonts.gstatic.com;
+              object-src 'none';
+              base-uri 'self';
+              form-action 'self';
+              frame-ancestors 'none';
+              connect-src 'self' *.supabase.co https://picsum.photos;
+              upgrade-insecure-requests;
+            `
+            return cspHeader.replace(/\s{2,}/g, ' ').trim()
+          })(),
         },
         {
           key: 'Cache-Control',

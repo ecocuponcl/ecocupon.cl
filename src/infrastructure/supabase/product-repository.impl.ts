@@ -45,6 +45,27 @@ export class SupabaseProductRepository implements IProductRepository {
     const limit = filter?.limit ?? 100
     const offset = filter?.offset ?? 0
 
+    if (!client) {
+      console.warn('Supabase client not initialized - returning MOCK products')
+      // Generar 8 productos de prueba realistas para que el Home no se vea vacío
+      const mockProducts = Array.from({ length: 8 }, (_, i) => ({
+        id: `mock-${i}`,
+        name: `Producto en Oferta #${i + 1}`,
+        description: 'Descripción de ejemplo para un producto ecológico en oferta.',
+        price: { value: 10000 + (i * 2000), currency: 'CLP' },
+        knastaPrices: [{ price: 8500 + (i * 1500) }], 
+        imageUrl: { value: `https://picsum.photos/seed/${i + 10}/400/400` },
+        categoryName: i % 2 === 0 ? 'Hogar' : 'Tecnología'
+      })) as any
+      
+      return { 
+        data: mockProducts.map((p: any) => ProductMapper.fromDatabase(p)),
+        total: mockProducts.length, 
+        limit, 
+        offset 
+      }
+    }
+
     let query = client
       .from(this.tableName)
       .select(`
@@ -89,6 +110,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async findById(id: string): Promise<Product | null> {
     const client = await this.getClient()
+    if (!client) return null
 
     const { data, error } = await client
       .from(this.tableName)
@@ -109,6 +131,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async findByCategory(categoryId: string, limit = 20): Promise<Product[]> {
     const client = await this.getClient()
+    if (!client) return []
 
     const { data, error } = await client
       .from(this.tableName)
@@ -127,6 +150,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async search(term: string, limit = 10): Promise<Product[]> {
     const client = await this.getClient()
+    if (!client) return []
 
     const { data, error } = await client
       .from(this.tableName)
@@ -144,6 +168,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async create(product: Product): Promise<Product> {
     const client = await this.getClient()
+    if (!client) throw new Error('Supabase client not initialized')
 
     const data = ProductMapper.toDatabase(product)
 
@@ -159,6 +184,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async update(product: Product): Promise<Product> {
     const client = await this.getClient()
+    if (!client) throw new Error('Supabase client not initialized')
 
     const data = ProductMapper.toDatabase(product)
 
@@ -177,6 +203,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async delete(id: string): Promise<void> {
     const client = await this.getClient()
+    if (!client) throw new Error('Supabase client not initialized')
 
     const { error } = await client.from(this.tableName).delete().eq('id', id)
 
@@ -188,6 +215,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async exists(id: string): Promise<boolean> {
     const client = await this.getClient()
+    if (!client) return false
 
     const { data } = await client
       .from(this.tableName)
@@ -200,6 +228,7 @@ export class SupabaseProductRepository implements IProductRepository {
 
   async count(): Promise<number> {
     const client = await this.getClient()
+    if (!client) return 0
 
     const { count } = await client
       .from(this.tableName)

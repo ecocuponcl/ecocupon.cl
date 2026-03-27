@@ -9,8 +9,12 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase credentials - check Vault configuration')
+  if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith('http')) {
+    if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+      console.error('CRITICAL: NEXT_PUBLIC_SUPABASE_URL must be a valid HTTPS URL.')
+    } else if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase credentials - check Vault configuration')
+    }
     return NextResponse.next({ request })
   }
 

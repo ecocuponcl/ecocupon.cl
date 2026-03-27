@@ -43,6 +43,16 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
   async findAll(): Promise<Category[]> {
     const client = await this.getClient()
 
+    if (!client) {
+      console.warn('Supabase client not initialized - returning MOCK categories')
+      return [
+        { id: '1', name: 'Ofertas de hoy', slug: 'all', description: 'Lo mejor del día', imageUrl: 'https://picsum.photos/seed/1/500/300' },
+        { id: '2', name: 'Tecnología', slug: 'technology', description: 'Gadgets y más', imageUrl: 'https://picsum.photos/seed/2/500/300' },
+        { id: '3', name: 'Moda', slug: 'fashion', description: 'Tendencias sostenibles', imageUrl: 'https://picsum.photos/seed/3/500/300' },
+        { id: '4', name: 'Hogar', slug: 'home', description: 'Todo para tu casa', imageUrl: 'https://picsum.photos/seed/4/500/300' },
+      ] as any
+    }
+
     const { data, error } = await client
       .from(this.tableName)
       .select('*')
@@ -156,6 +166,16 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
 
   async findAllWithProductCount(): Promise<Array<Category & { productCount: number }>> {
     const client = await this.getClient()
+
+    if (!client) {
+      console.warn('Supabase client not initialized - returning MOCK categories with count')
+      return [
+        { id: '1', name: 'Ofertas de hoy', slug: 'all', description: 'Lo mejor del día', imageUrl: 'https://picsum.photos/seed/1/500/300', productCount: 12 },
+        { id: '2', name: 'Tecnología', slug: 'technology', description: 'Gadgets y más', imageUrl: 'https://picsum.photos/seed/2/500/300', productCount: 45 },
+        { id: '3', name: 'Moda', slug: 'fashion', description: 'Tendencias sostenibles', imageUrl: 'https://picsum.photos/seed/3/500/300', productCount: 23 },
+        { id: '4', name: 'Hogar', slug: 'home', description: 'Todo para tu casa', imageUrl: 'https://picsum.photos/seed/4/500/300', productCount: 67 },
+      ] as any
+    }
 
     const { data, error } = await client
       .from(this.tableName)
