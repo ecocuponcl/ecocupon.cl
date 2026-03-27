@@ -33,7 +33,7 @@ export default function ProfilePage() {
     const supabase = createClient()
 
     // Check auth
-    supabase.auth.getUser().then((response) => {
+    supabase.auth.getUser().then((response: any) => {
       const { user } = response.data
       if (!user) {
         router.push("/auth/login")
