@@ -114,7 +114,8 @@ export default function ScanPage() {
     }
 
     const supabase = createClient()
-    const { data: { user }: { user: any } } = await supabase.auth.getUser()
+    const response = await supabase.auth.getUser()
+    const user = response.data.user
 
     if (!user) {
       toast({

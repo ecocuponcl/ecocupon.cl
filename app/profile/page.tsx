@@ -33,7 +33,8 @@ export default function ProfilePage() {
     const supabase = createClient()
 
     // Check auth
-    supabase.auth.getUser().then(({ data: { user }: { user: any } }) => {
+    supabase.auth.getUser().then((response) => {
+      const { user } = response.data
       if (!user) {
         router.push("/auth/login")
         return
@@ -44,7 +45,8 @@ export default function ProfilePage() {
     // Load profile data
     const loadProfile = async () => {
       try {
-        const { data: { user }: { user: any } } = await supabase.auth.getUser()
+        const response = await supabase.auth.getUser()
+        const user = response.data.user
         if (!user) return
 
         // Get profile stats
