@@ -41,13 +41,16 @@ async function fetchPlateInfo(plate: string): Promise<PlateInfo | null> {
   const apiKey = process.env.BOOTSTR_API_KEY
   
   if (!apiKey) {
-    console.warn('BOOTSTR_API_KEY not configured')
+    console.error('❌ BOOTSTR_API_KEY no configurada')
     return null
   }
 
   try {
     // Boostr.cl API endpoint para consulta de patentes
-    const url = `https://api.boostr.cl/v1/vehicle/plate/${encodeURIComponent(plate)}`
+    // Endpoint correcto: GET /patente/{patente}
+    const url = `https://api.boostr.cl/patente/${encodeURIComponent(plate)}`
+    
+    console.log('🔍 Consultando Boostr API:', url)
     
     const response = await fetch(url, {
       method: 'GET',
@@ -57,19 +60,29 @@ async function fetchPlateInfo(plate: string): Promise<PlateInfo | null> {
       }
     })
 
+    console.log('📡 Response status:', response.status)
+
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Boostr API error:', response.status, errorText)
+      
       if (response.status === 404) {
-        console.log('Plate not found in Boostr API')
+        console.log('Placa no encontrada en Boostr API')
+        return null
+      }
+      if (response.status === 401 || response.status === 403) {
+        console.error('API Key inválida o sin permisos')
         return null
       }
       if (response.status === 429) {
-        console.warn('Boostr API rate limit exceeded')
+        console.warn('Boostr API rate limit excedido')
         return null
       }
       throw new Error(`Boostr API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('✅ Boostr API response:', JSON.stringify(data, null, 2))
     
     // Normalize response to our interface
     return {
@@ -90,8 +103,8 @@ async function fetchPlateInfo(plate: string): Promise<PlateInfo | null> {
       tasacion_fiscal: data.tasacion_fiscal,
       region_procedencia: data.region_procedencia
     }
-  } catch (error) {
-    console.error('Error fetching plate info from Boostr:', error)
+  } catch (error: any) {
+    console.error('❌ Error fetching plate info from Boostr:', error.message)
     return null
   }
 }
