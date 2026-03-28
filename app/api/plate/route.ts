@@ -41,8 +41,12 @@ const DAILY_LIMIT = 10
 async function fetchPlateInfo(plate: string): Promise<PlateInfo | null> {
   const apiKey = process.env.BOOTSTR_API_KEY
   
+  console.log('🔑 BOOTSTR_API_KEY configurada:', !!apiKey)
+  console.log('🔑 BOOTSTR_API_KEY length:', apiKey?.length)
+  console.log('🔑 BOOTSTR_API_KEY first chars:', apiKey?.substring(0, 10) + '...')
+  
   if (!apiKey) {
-    console.error('❌ BOOTSTR_API_KEY no configurada')
+    console.error('❌ BOOTSTR_API_KEY no configurada en environment variables')
     return null
   }
 
@@ -52,7 +56,7 @@ async function fetchPlateInfo(plate: string): Promise<PlateInfo | null> {
     const url = `https://api.boostr.cl/vehicle/${encodeURIComponent(plate)}.json`
     
     console.log('🔍 Consultando Boostr API:', url)
-    console.log('🔑 API Key presente:', !!apiKey)
+    console.log('🚗 Placa:', plate)
     
     const response = await fetch(url, {
       method: 'GET',
