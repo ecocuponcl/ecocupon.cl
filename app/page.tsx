@@ -1,170 +1,248 @@
+"use client"
+
+import { useState } from "react"
+import { Check, AlertCircle, Car, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Zap, Monitor, Shirt, Home } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { formatPrice } from "@/lib/utils"
-import { CatalogService } from "@/application"
-import { PriceComparisonService } from "@/domains/pricing"
+import { useToast } from "@/hooks/use-toast"
 
-const CATEGORY_ICONS = [
-  { slug: "all", label: "Ofertas de hoy", icon: Zap, color: "bg-primary", desc: "Las bajadas de precio de las últimas horas" },
-  { slug: "technology", label: "Tecnología", icon: Monitor, color: "bg-blue-600", desc: "Las mejores ofertas en tecnología" },
-  { slug: "fashion", label: "Moda", icon: Shirt, color: "bg-rose-600", desc: "Ofertas en ropa y calzado" },
-  { slug: "home", label: "Hogar", icon: Home, color: "bg-amber-600", desc: "Descuentos en productos para el hogar" },
-] as const
-
-async function getHomePageData() {
-  try {
-    const catalogService = new CatalogService()
-    
-    const [categories, productsResult] = await Promise.all([
-      catalogService.getCategoriesWithProductCount(),
-      catalogService.getHomeProducts(20),
-    ]).catch(err => {
-      console.error('Data fetch error:', err)
-      return [[], { data: [] }]
-    })
-
-    // Filtrar productos con descuento usando domain service
-    const discountedProducts = (productsResult as any).data.filter((product: any) => {
-      if (!product.knastaPrices || product.knastaPrices.length === 0) return false
-      const knastaPrice = product.knastaPrices[0].price
-      return knastaPrice < product.price.value
-    })
-
-    return {
-      categories: categories as any[],
-      products: discountedProducts,
-    }
-  } catch (error) {
-    console.error('Critical home page error:', error)
-    return {
-      categories: [],
-      products: [],
-    }
-  }
+interface PlateResponse {
+  success: boolean
+  valid: boolean
+  format?: string
+  normalized?: string
+  error?: string
+  remaining?: number
+  message: string
 }
 
-export default async function HomePage() {
-  const { categories, products } = await getHomePageData()
+export default function HomePage() {
+  const [plate, setPlate] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [response, setResponse] = useState<PlateResponse | null>(null)
+  const { toast } = useToast()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!plate.trim()) {
+      toast({
+        title: "Placa requerida",
+        description: "Ingresa la placa patente del vehículo",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoading(true)
+    setResponse(null)
+
+    try {
+      // Call the API
+      const res = await fetch("/api/plate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plate })
+      })
+
+      const data = await res.json()
+      setResponse(data)
+      setLoading(false)
+
+      if (data.success) {
+        toast({
+          title: "¡Placa validada!",
+          description: data.message,
+        })
+      } else {
+        toast({
+          title: data.error === "DAILY_LIMIT_REACHED" ? "Límite alcanzado" : "Formato inválido",
+          description: data.message,
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("API error:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo conectar con el servidor",
+        variant: "destructive"
+      })
+      setLoading(false)
+    }
+  }
+
+  const handleReset = () => {
+    setPlate("")
+    setResponse(null)
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4 sm:py-8">
-      <section className="mb-6 sm:mb-10">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {CATEGORY_ICONS.map((c) => (
-            <Link key={c.slug} href={`/category/${c.slug}`}>
-              <Card className="group h-full overflow-hidden border-0 bg-foreground text-background transition-shadow hover:shadow-lg">
-                <CardContent className="flex h-full flex-col p-3 sm:p-5">
-                  <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full sm:h-10 sm:w-10 ${c.color} text-background`}>
-                    <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
-                  <h2 className="mb-1 text-sm font-bold sm:text-lg">{c.label}</h2>
-                  <p className="mb-3 text-xs text-muted-foreground/70 sm:text-sm">{c.desc}</p>
-                  <div className="mt-auto">
-                    <span className="inline-flex items-center text-xs font-medium text-primary sm:text-sm">
-                      Ver ofertas <ArrowRight className="ml-1 h-3 w-3" />
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="mb-6 sm:mb-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold sm:text-2xl">Mejores Ofertas</h2>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/category/all">Ver todo</Link>
-          </Button>
-        </div>
-
-        {products.length === 0 ? (
-          <p className="py-12 text-center text-muted-foreground">No hay productos con descuento disponibles.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {products.map((product: any, index: number) => {
-              const knastaPrice = product.knastaPrices?.[0]?.price
-              const discount = knastaPrice
-                ? PriceComparisonService.calculateSavings(
-                    { value: knastaPrice, currency: 'CLP' } as any,
-                    { value: product.price, currency: 'CLP' } as any
-                  ).discountPercent
-                : 0
-
-              return (
-                <Link key={product.id} href={`/product/${product.id}`} className="group">
-                  <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
-                    <div className="relative aspect-square bg-muted">
-                      <Image
-                        src={product.imageUrl?.value || "/placeholder.svg?height=300&width=300"}
-                        alt={product.name}
-                        fill
-                        className="object-contain p-3"
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        priority={index < 4}
-                      />
-                      {discount > 0 && (
-                        <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground">
-                          -{discount}%
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="flex flex-1 flex-col p-2.5 sm:p-4">
-                      <span className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground sm:text-xs">
-                        {product.categoryName || "General"}
-                      </span>
-                      <h3 className="mb-2 line-clamp-2 text-xs font-medium leading-snug group-hover:underline sm:text-sm">
-                        {product.name}
-                      </h3>
-                      <div className="mt-auto">
-                        <span className="block text-xs text-muted-foreground line-through">
-                          ${formatPrice(product.price.value)}
-                        </span>
-                        <span className="text-base font-bold sm:text-lg">
-                          ${formatPrice(knastaPrice ?? product.price.value)}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto max-w-2xl px-4 py-8 sm:py-12">
+        {/* Header */}
+        <div className="text-center mb-8 space-y-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Car className="w-8 h-8 text-primary" />
           </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-lg font-bold sm:text-2xl">Categorías</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((cat) => (
-            <Link key={cat.id} href={`/category/${cat.slug}`}>
-              <Card className="group overflow-hidden transition-shadow hover:shadow-md">
-                <div className="relative h-32 w-full bg-muted sm:h-44">
-                  <Image
-                    src={cat.imageUrl || "/placeholder.svg?height=300&width=500"}
-                    alt={cat.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                </div>
-                <CardContent className="flex items-center justify-between p-3 sm:p-4">
-                  <div>
-                    <h3 className="font-semibold sm:text-lg">{cat.name}</h3>
-                    <p className="text-xs text-muted-foreground sm:text-sm">{cat.description}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+            Validación de Placa Patente
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Ingresa la placa patente de tu vehículo para validar el formato
+          </p>
         </div>
-      </section>
+
+        {/* Input Form */}
+        <Card className="mb-6 shadow-lg">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label 
+                  htmlFor="plate" 
+                  className="text-sm font-medium text-foreground"
+                >
+                  Placa Patente
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="plate"
+                    type="text"
+                    value={plate}
+                    onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                    placeholder="ABCD-12 o AA-12-34"
+                    className="flex-1 px-4 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent uppercase tracking-wider font-mono"
+                    maxLength={9}
+                    disabled={loading}
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="px-6"
+                  >
+                    {loading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Validar"
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ejemplos: ABCD-12, ABC-12, AA-12-34
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Response Display */}
+        {response && (
+          <Card className={`mb-6 shadow-lg border-2 ${
+            response.valid 
+              ? "border-green-500/50 bg-green-500/5" 
+              : "border-red-500/50 bg-red-500/5"
+          }`}>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    response.valid 
+                      ? "bg-green-500/20" 
+                      : "bg-red-500/20"
+                  }`}>
+                    {response.valid ? (
+                      <Check className="w-6 h-6 text-green-600" />
+                    ) : (
+                      <AlertCircle className="w-6 h-6 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className={`text-lg font-semibold ${
+                      response.valid 
+                        ? "text-green-700" 
+                        : "text-red-700"
+                    }`}>
+                      {response.valid ? "¡Válido!" : "Inválido"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {response.message}
+                    </p>
+                  </div>
+                </div>
+
+                {response.valid && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                        Formato
+                      </p>
+                      <p className="text-sm font-medium">
+                        {response.format === "old" ? "Antiguo" : "Nuevo"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                        Placa Normalizada
+                      </p>
+                      <p className="text-sm font-mono font-bold">
+                        {response.normalized}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {response.remaining !== undefined && (
+                  <div className="text-center text-sm text-muted-foreground pt-2 border-t">
+                    Validaciones restantes hoy: <span className="font-semibold text-foreground">{response.remaining}</span>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={handleReset} 
+                  variant="outline" 
+                  className="w-full mt-4"
+                >
+                  Validar Otra Placa
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Info Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-2">
+                  Formatos soportados:
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                      ABCD-12
+                    </span>
+                    <span>Patente antigua (4 letras + 2 números)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                      ABC-12
+                    </span>
+                    <span>Patente antigua (3 letras + 2 números)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                      AA-12-34
+                    </span>
+                    <span>Patente nueva (2-2-2)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
