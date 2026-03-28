@@ -6,6 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 
+interface PlateInfo {
+  plate: string
+  patente: string
+  digito_verificador?: string
+  marca?: string
+  modelo?: string
+  ano_fabricacion?: string
+  tipo_vehiculo?: string
+  color?: string
+  motor_numero?: string
+  vin?: string
+  propietario?: {
+    nombre?: string
+    rut?: string
+  }
+  tasacion_fiscal?: number
+  region_procedencia?: string
+}
+
 interface PlateResponse {
   success: boolean
   valid: boolean
@@ -14,6 +33,7 @@ interface PlateResponse {
   error?: string
   remaining?: number
   message: string
+  info?: PlateInfo
 }
 
 export default function HomePage() {
@@ -170,24 +190,107 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {response.valid && (
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                        Formato
-                      </p>
-                      <p className="text-sm font-medium">
-                        {response.format === "old" ? "Antiguo" : "Nuevo"}
-                      </p>
+                {response.valid && response.info && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Marca
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.marca || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Modelo
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.modelo || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Año
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.ano_fabricacion || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Tipo
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.tipo_vehiculo || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Color
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.color || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Región
+                        </p>
+                        <p className="text-sm font-medium">
+                          {response.info.region_procedencia || "N/A"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                        Placa Normalizada
-                      </p>
-                      <p className="text-sm font-mono font-bold">
-                        {response.normalized}
-                      </p>
-                    </div>
+
+                    {response.info.propietario && (
+                      <div className="pt-3 border-t bg-muted/50 rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                          Propietario
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {response.info.propietario.nombre || "N/A"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              RUT: {response.info.propietario.rut || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {response.info.tasacion_fiscal && (
+                      <div className="pt-3 border-t">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          Tasación Fiscal
+                        </p>
+                        <p className="text-lg font-bold text-green-600">
+                          ${response.info.tasacion_fiscal.toLocaleString('es-CL')}
+                        </p>
+                      </div>
+                    )}
+
+                    {response.info.vin && (
+                      <div className="pt-2">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          VIN
+                        </p>
+                        <p className="text-xs font-mono">
+                          {response.info.vin}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {response.valid && !response.info && (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>Formato de placa válido</p>
+                    <p className="text-sm">Placa: <span className="font-mono font-bold">{response.normalized}</span></p>
                   </div>
                 )}
 
