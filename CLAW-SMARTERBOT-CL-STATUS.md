@@ -1,8 +1,8 @@
 # 🔧 claw.smarterbot.cl - Configuration Status
 
-**Updated:** 2026-03-30
+**Updated:** 2026-03-30 08:20 UTC
 **Tunnel ID:** `f8413b6e-87a3-479d-9030-4b706007ee58`
-**Status:** Configured ✅ | DNS Propagation ⏳
+**Status:** ✅ OPERATIONAL | Gateway Active | DNS Propagating
 
 ---
 
@@ -17,7 +17,7 @@ os.smarterbot.cl            → localhost:80              ⏳ Pending
 api.smarterbot.cl           → localhost:3003            ⏳ Pending
 api.smarterbot.store        → localhost:3003            ⏳ Pending
 nullclaw.smarterbot.cl      → localhost:3000            ⏳ Pending
-claw.smarterbot.cl          → localhost:18789           ⏳ Pending (OpenClaw Gateway)
+claw.smarterbot.cl          → localhost:18789           ✅ ACTIVE (JiuwenClaw Gateway)
 jiuwen.smarterbot.cl        → localhost:5173            ✅ Ready (JiuwenClaw Web UI)
 tienda.smarterbot.cl        → localhost:80              ⏳ Pending
 odoo.smarterbot.store       → localhost:80              ⏳ Pending
@@ -31,6 +31,7 @@ odoo.smarterbot.store       → localhost:80              ⏳ Pending
 
 | Service | Port | Status | URL |
 |---------|------|--------|-----|
+| **JiuwenClaw Gateway** | 18789 | ✅ RUNNING | ws://localhost:18789/ws |
 | **JiuwenClaw Web** | 5173 | ✅ Running | http://localhost:5173 |
 | **JiuwenClaw App** | 19000 | ✅ Running | http://localhost:19000 |
 | **Browser MCP** | 8940 | ✅ Running | http://localhost:8940/mcp |
@@ -39,8 +40,9 @@ odoo.smarterbot.store       → localhost:80              ⏳ Pending
 
 | Subdomain | Purpose | Status |
 |-----------|---------|--------|
-| `jiuwen.smarterbot.cl` | JiuwenClaw Web UI | ⏳ DNS Propagating |
-| `claw.smarterbot.cl` | OpenClaw Gateway (Future) | ⏳ Configured |
+| `claw.smarterbot.cl` | JiuwenClaw Gateway (WS) | ✅ ACTIVE - DNS Propagating |
+| `jiuwen.smarterbot.cl` | JiuwenClaw Web UI | ✅ Ready - DNS Propagating |
+| `nullclaw.smarterbot.cl` | NullClaw MCP Server | ⏳ Configured |
 
 ---
 
@@ -82,9 +84,10 @@ odoo.smarterbot.store       → localhost:80              ⏳ Pending
 │  └────────────────────────────────────────────────────┘    │
 │                                                              │
 │  ┌────────────────────────────────────────────────────┐    │
-│  │ OpenClaw Gateway (localhost:18789) [FUTURE]        │    │
-│  │ → Serial/WS control for robotics hardware          │    │
+│  │ JiuwenClaw Gateway (localhost:18789) [ACTIVE]     │    │
+│  │ → WebSocket control for robotics hardware          │    │
 │  │ → Accessible via: claw.smarterbot.cl               │    │
+│  │ → WS Endpoint: /ws                                  │    │
 │  └────────────────────────────────────────────────────┘    │
 │                                                              │
 │  ┌────────────────────────────────────────────────────┐    │
@@ -219,8 +222,14 @@ dig claw.smarterbot.cl
 # Test JiuwenClaw Web UI
 open http://localhost:5173
 
+# Test Gateway WebSocket (need wscat or similar)
+wscat -c ws://localhost:18789/ws
+
 # Test API health
 curl http://localhost:19000/health
+
+# Check Gateway logs
+tail -f /Users/mac/.jiuwenclaw/.logs/gateway.log
 ```
 
 ### 2. Public URL Testing (After DNS)
@@ -298,8 +307,8 @@ jiuwenclaw-start
 | Tenant | Domain | Local Port | Cloudflare Status |
 |--------|--------|------------|-------------------|
 | **EcoCupón** | ecocupon.cl | N/A (VPS) | ✅ Production |
-| **JiuwenClaw** | jiuwen.smarterbot.cl | 5173 | ⏳ DNS Propagating |
-| **OpenClaw Gateway** | claw.smarterbot.cl | 18789 | ⏳ Configured |
+| **JiuwenClaw Gateway** | claw.smarterbot.cl | 18789 | ✅ ACTIVE |
+| **JiuwenClaw Web** | jiuwen.smarterbot.cl | 5173 | ✅ Ready |
 | **NullClaw MCP** | nullclaw.smarterbot.cl | 3000 | ⏳ Pending |
 | **SmarterOS API** | api.smarterbot.cl | 3003 | ⏳ Pending |
 
@@ -312,15 +321,19 @@ jiuwenclaw-start
 1. **Wait for DNS propagation** (30-60 seconds typical)
 2. **Test public URLs:**
    ```bash
-   curl -I https://jiuwen.smarterbot.cl
    curl -I https://claw.smarterbot.cl
+   curl -I https://jiuwen.smarterbot.cl
+   ```
+3. **Test WebSocket via tunnel:**
+   ```bash
+   wscat -c wss://claw.smarterbot.cl/ws
    ```
 
 ### Short Term (1 hour)
 
-1. **Start OpenClaw Gateway** on port 18789 (if hardware control needed)
-2. **Configure n8n workflow** for EcoCupón → JiuwenClaw integration
-3. **Test end-to-end flow** from Telegram to hardware
+1. **Configure n8n workflow** for EcoCupón → JiuwenClaw integration
+2. **Test end-to-end flow** from Telegram to hardware
+3. **Setup serial control** for robotic arm (if hardware connected)
 
 ### Medium Term (1 day)
 
@@ -341,5 +354,5 @@ jiuwenclaw-start
 
 ---
 
-**Last Updated:** 2026-03-30 05:15 UTC
-**Status:** Configuration Complete | DNS Propagating ⏳
+**Last Updated:** 2026-03-30 08:20 UTC
+**Status:** ✅ Gateway OPERATIONAL | DNS Propagating ⏳
