@@ -1,0 +1,23 @@
+{
+  "name": "smarteros-mcp",
+  "version": "1.0.0",
+  "description": "SmarterOS MCP Server para Ecocupon.cl - Validación QR, Saldo, Reciclaje y Cupones",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [
+    "mcp",
+    "smarteros",
+    "ecocupon",
+    "supabase"
+  ],
+  "author": "Smarter SPA",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.49.0"
+  }
+}

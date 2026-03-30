@@ -2,6 +2,13 @@
   "mcpServers": {
     "supabase": {
       "url": "https://mcp.supabase.com/mcp?project_ref=uyxvzztnsvfcqmgkrnol"
+    },
+    "smarteros": {
+      "command": "node",
+      "args": ["./smarteros-mcp/index.js"],
+      "env": {
+        "SUPABASE_URL": "https://uyxvzztnsvfcqmgkrnol.supabase.co"
+      }
     }
   }
 }
