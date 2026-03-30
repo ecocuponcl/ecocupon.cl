@@ -4,7 +4,9 @@
  * Herramientas disponibles:
  * - validar_qr: Valida un código QR de usuario
  * - consultar_saldo: Consulta el saldo de puntos de un usuario
- * - registrar_reciclaje: Registra una transacción de reciclaje
+ * - registrar_reciclaje: Registra una transacción de reciclaje (basura/residuos)
+ * - analizar_placa: Analiza/valida una placa patente (texto o imagen OCR)
+ * - registrar_por_placa: Registra reciclaje por placa patente
  * - emitir_cupon: Emite un nuevo cupón de descuento
  * 
  * Sin JWT - Comunicación directa en VPS controlado
@@ -359,12 +361,230 @@ server.tool(
   }
 );
 
+/**
+ * Herramienta: analizar_placa
+ * Valida y normaliza una placa patente chilena (texto o resultado OCR)
+ * Soporta formatos: ABCD-12, ABC-12, AA-12-34
+ */
+server.tool(
+  "analizar_placa",
+  "Valida y normaliza una placa patente chilena. Retorna el formato normalizado y si es válido.",
+  {
+    plate_text: { type: "string", description: "Texto de la placa (ingresado manualmente o desde OCR)" },
+    source: { type: "string", description: "Origen: 'manual' o 'ocr'", enum: ["manual", "ocr"] }
+  },
+  async ({ plate_text, source }) => {
+    try {
+      // Normalizar: uppercase, remover espacios
+      const normalized = plate_text.toUpperCase().trim();
+      
+      // Patrones de placas chilenas
+      const patterns = [
+        { regex: /^([A-Z]{4})(\d{2})$/, format: "ABCD-12", example: "ABCD-12" }, // Patente antigua 4L+2N
+        { regex: /^([A-Z]{3})(\d{2})$/, format: "ABC-12", example: "ABC-12" },   // Patente antigua 3L+2N
+        { regex: /^([A-Z]{2})-?(\d{2})-?(\d{2})$/, format: "AA-12-34", example: "AA-12-34" } // Patente nueva
+      ];
+
+      let validFormat = null;
+      let formattedPlate = normalized;
+
+      for (const pattern of patterns) {
+        const match = normalized.match(pattern.regex);
+        if (match) {
+          validFormat = pattern.format;
+          
+          // Formatear según el patrón
+          if (pattern.format === "ABCD-12") {
+            formattedPlate = `${match[1]}-${match[2]}`;
+          } else if (pattern.format === "ABC-12") {
+            formattedPlate = `${match[1]}-${match[2]}`;
+          } else if (pattern.format === "AA-12-34") {
+            formattedPlate = `${match[1]}-${match[2]}-${match[3]}`;
+          }
+          break;
+        }
+      }
+
+      const isValid = validFormat !== null;
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: isValid,
+            plate: formattedPlate,
+            original: plate_text,
+            format: validFormat || "desconocido",
+            source: source || "manual",
+            message: isValid ? "Placa válida" : "Formato de placa no reconocido"
+          })
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: false,
+            message: "Error al analizar placa",
+            error: error.message
+          })
+        }]
+      };
+    }
+  }
+);
+
+/**
+ * Herramienta: registrar_por_placa
+ * Registra reciclaje asociado a una placa patente (auto/moto)
+ */
+server.tool(
+  "registrar_por_placa",
+  "Registra un evento de reciclaje asociado a una placa patente de vehículo",
+  {
+    plate: { type: "string", description: "Placa patente del vehículo" },
+    material_type: { type: "string", description: "Tipo de material: plastico, vidrio, papel, aluminio, organico, mixto" },
+    weight_kg: { type: "number", description: "Peso en kilogramos (opcional)" },
+    points: { type: "number", description: "Puntos a asignar (default: 100)" },
+    user_id: { type: "string", description: "ID del usuario (opcional si no está autenticado)" }
+  },
+  async ({ plate, material_type, weight_kg, points, user_id }) => {
+    try {
+      // Primero validar/normalizar la placa
+      const normalized = plate.toUpperCase().trim();
+      
+      // Insertar en recycling_events (tabla específica para eventos con placa)
+      const { data: event, error } = await supabase
+        .from("recycling_events")
+        .insert({
+          user_id: user_id || null,
+          plate: normalized,
+          material_type,
+          weight_kg: weight_kg || null,
+          points: points || 100,
+          status: "completed",
+          source: "smartermcp"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Si hay user_id, sumar puntos al usuario
+      if (user_id) {
+        await supabase
+          .from("users")
+          .update({ points: supabase.raw(`points + ${points || 100}`) })
+          .eq("id", user_id);
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: true,
+            message: "Reciclaje registrado por placa",
+            event: {
+              id: event.id,
+              plate: event.plate,
+              material_type: event.material_type,
+              points: event.points,
+              status: event.status
+            }
+          })
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: false,
+            message: "Error al registrar por placa",
+            error: error.message
+          })
+        }]
+      };
+    }
+  }
+);
+
+/**
+ * Herramienta: registrar_basura
+ * Registra reciclaje de basura/residuos (sin placa, solo usuario)
+ */
+server.tool(
+  "registrar_basura",
+  "Registra un evento de reciclaje de basura/residuos sin vehículo",
+  {
+    user_id: { type: "string", description: "ID del usuario" },
+    material_type: { type: "string", description: "Tipo de material: plastico, vidrio, papel, aluminio, organico, mixto" },
+    weight_kg: { type: "number", description: "Peso en kilogramos" },
+    photo_url: { type: "string", description: "URL de la foto del residuo (opcional)" }
+  },
+  async ({ user_id, material_type, weight_kg, photo_url }) => {
+    try {
+      const points = Math.round(weight_kg * 50); // 50 puntos por kg de basura
+
+      const { data: event, error } = await supabase
+        .from("recycling_events")
+        .insert({
+          user_id,
+          material_type,
+          weight_kg,
+          photo_url: photo_url || null,
+          points,
+          status: "completed",
+          source: "smartermcp_basura"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Sumar puntos al usuario
+      await supabase
+        .from("users")
+        .update({ points: supabase.raw(`points + ${points}`) })
+        .eq("id", user_id);
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: true,
+            message: "Basura registrada exitosamente",
+            event: {
+              id: event.id,
+              material_type: event.material_type,
+              weight_kg: event.weight_kg,
+              points: event.points
+            }
+          })
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            success: false,
+            message: "Error al registrar basura",
+            error: error.message
+          })
+        }]
+      };
+    }
+  }
+);
+
 // Iniciar servidor
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("SmarterOS MCP Server corriendo en VPS...");
-  console.error("Herramientas disponibles: validar_qr, consultar_saldo, registrar_reciclaje, emitir_cupon, listar_cupones_activos");
+  console.error("Tools: validar_qr, consultar_saldo, registrar_reciclaje, registrar_basura, registrar_por_placa, analizar_placa, emitir_cupon, listar_cupones_activos");
 }
 
 main().catch(console.error);

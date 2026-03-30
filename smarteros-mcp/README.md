@@ -6,13 +6,63 @@ MCP Server implementando el protocolo **Model Context Protocol** para integrar E
 
 Herramientas disponibles:
 
-| Herramienta | Descripción |
-|-------------|-------------|
-| `validar_qr` | Valida un código QR de usuario y retorna su información |
-| `consultar_saldo` | Consulta el saldo de puntos de un usuario |
-| `registrar_reciclaje` | Registra una transacción de reciclaje y suma puntos |
-| `emitir_cupon` | Emite un nuevo cupón de descuento |
-| `listar_cupones_activos` | Lista los cupones activos de un usuario |
+| Herramienta | Descripción | Caso de Uso |
+|-------------|-------------|-------------|
+| `validar_qr` | Valida un código QR de usuario | Login QR en EcoCanasta/EcoCupon |
+| `consultar_saldo` | Consulta el saldo de puntos | Ver puntos acumulados |
+| `registrar_reciclaje` | Registra reciclaje genérico | Cualquier evento de reciclaje |
+| `registrar_basura` | Registra basura/residuos con foto | **Flujo 1: Basura por foto** |
+| `registrar_por_placa` | Registra reciclaje por placa | **Flujo 2: Autos/motos por patente** |
+| `analizar_placa` | Valida formato de placa patente | OCR o ingreso manual de patente |
+| `emitir_cupon` | Emite cupón de descuento | Recompensa por reciclaje |
+| `listar_cupones_activos` | Lista cupones activos | Ver cupones disponibles |
+
+## 📋 Dos Flujos Principales
+
+### Flujo 1: Basura/Residuos (Foto)
+
+```
+Usuario → Captura foto → registrar_basura() → Puntos
+```
+
+```json
+{
+  "tool": "registrar_basura",
+  "arguments": {
+    "user_id": "uuid-usuario",
+    "material_type": "plastico",
+    "weight_kg": 2.5,
+    "photo_url": "https://storage.../foto.jpg"
+  }
+}
+```
+
+### Flujo 2: Autos/Motos (Placa Patente)
+
+```
+Usuario → Foto placa o texto → analizar_placa() → registrar_por_placa() → Puntos
+```
+
+```json
+{
+  "tool": "analizar_placa",
+  "arguments": {
+    "plate_text": "ABCD12",
+    "source": "ocr"
+  }
+}
+```
+
+```json
+{
+  "tool": "registrar_por_placa",
+  "arguments": {
+    "plate": "ABCD-12",
+    "material_type": "vidrio",
+    "points": 100
+  }
+}
+```
 
 ## 📦 Instalación
 
