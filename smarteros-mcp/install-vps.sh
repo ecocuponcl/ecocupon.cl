@@ -73,7 +73,9 @@ cat > package.json << 'EOF'
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@supabase/supabase-js": "^2.49.0"
+    "@supabase/supabase-js": "^2.49.0",
+    "dotenv": "^17.3.1",
+    "zod": "^4.3.6"
   }
 }
 EOF
