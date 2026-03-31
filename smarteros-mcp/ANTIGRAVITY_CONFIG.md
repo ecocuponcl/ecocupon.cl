@@ -1,5 +1,12 @@
 # Configuración SmarterMCP para Antigravity
 
+## ✅ Estado: OPERATIVO
+
+**Test realizado:** Conexión a Supabase verificada
+- ✅ SUPABASE_URL: https://uyxvzztnsvfcqmgkrnol.supabase.co
+- ✅ SUPABASE_KEY: Configurada (Service Role)
+- ✅ Tablas: `recycling_events`, `coupons` disponibles
+
 ## Copia esto en tu mcp.json de Antigravity
 
 ```json
