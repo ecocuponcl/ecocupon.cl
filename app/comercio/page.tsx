@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MerchantOnboarding } from "@/components/merchant-onboarding"
 import { PromotionForm } from "@/components/promotion-form"
+import { PromotionStatusToggle } from "@/components/promotion-status-toggle"
 
 export const dynamic = "force-dynamic"
 
@@ -163,9 +164,12 @@ export default async function MerchantPage() {
                         {discount} · {stats.issued} emitidos · {stats.redeemed} canjeados
                       </p>
                     </div>
-                    <Badge variant={promo.status === "published" ? "default" : "secondary"}>
-                      {STATUS_LABEL[promo.status] ?? promo.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={promo.status === "published" ? "default" : "secondary"}>
+                        {STATUS_LABEL[promo.status] ?? promo.status}
+                      </Badge>
+                      <PromotionStatusToggle promotionId={promo.id} status={promo.status} />
+                    </div>
                   </li>
                 )
               })}

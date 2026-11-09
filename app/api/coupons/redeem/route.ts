@@ -37,11 +37,16 @@ export async function POST(request: Request) {
   })
 
   if (error) {
-    const unauthorized = error.code === "42501"
-    return NextResponse.json(
-      { error: unauthorized ? "no autorizado para validar cupones de este comercio" : "no se pudo validar" },
-      { status: unauthorized ? 403 : 500 },
-    )
+    // 42501 en el RPC ahora solo significa "sin sesión": la autorización por
+    // comercio se resuelve dentro devolviendo cero filas, para no revelar si
+    // el cupón existe en otro comercio.
+    if (error.code === "42501") {
+      return NextResponse.json({ error: "se requiere sesión" }, { status: 401 })
+    }
+    if (error.code === "22023") {
+      return NextResponse.json({ error: "sucursal no válida" }, { status: 400 })
+    }
+    return NextResponse.json({ error: "no se pudo validar" }, { status: 500 })
   }
 
   const redeemed = Array.isArray(data) ? data[0] : data

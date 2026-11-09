@@ -6,7 +6,6 @@ import { ArrowLeft, Share2, ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ProductCoupon } from "@/components/product-coupon"
 import { ProductService } from "@/application"
 import { PriceComparisonService } from "@/domains/pricing"
 import { formatPrice } from "@/lib/utils"
@@ -109,17 +108,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          {/* Coupon */}
+          {/* Los cupones viven en el marketplace, no en la ficha de producto. */}
           {discount > 0 && (
-            <ProductCoupon
-              product={{
-                id: product.id,
-                name: product.name,
-                price: product.price.value,
-                knastaPrice: product.knastaPrice ? { price: product.knastaPrice.price } : null,
-              }}
-              discount={discount}
-            />
+            <Link
+              href="/promociones"
+              className="mb-4 inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-muted"
+            >
+              Ver promociones disponibles
+            </Link>
           )}
 
           {/* Actions */}

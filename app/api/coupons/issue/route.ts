@@ -51,8 +51,9 @@ export async function POST(request: Request) {
   }
 
   // El token en claro se devuelve una sola vez y no se persiste en ningún lado.
+  // no-store evita que un token quede en cachés intermedias.
   return NextResponse.json(
     { token, promotionId: promotion.id, expiresAt: expiresAt.toISOString() },
-    { status: 201 },
+    { status: 201, headers: { "Cache-Control": "no-store" } },
   )
 }

@@ -10,7 +10,6 @@ const createSchema = z.object({
   discountValue: z.number().positive(),
   terms: z.string().trim().max(1000).optional().nullable(),
   endsAt: z.string().datetime().optional().nullable(),
-  maxRedemptions: z.number().int().positive().optional().nullable(),
   maxRedemptionsPerUser: z.number().int().positive().max(50).default(1),
   status: z.enum(["draft", "published"]).default("draft"),
 })
@@ -46,7 +45,6 @@ export async function POST(request: Request) {
       discount_value: body.discountValue,
       terms: body.terms ?? null,
       ends_at: body.endsAt ?? null,
-      max_redemptions: body.maxRedemptions ?? null,
       max_redemptions_per_user: body.maxRedemptionsPerUser,
       status: body.status,
     })

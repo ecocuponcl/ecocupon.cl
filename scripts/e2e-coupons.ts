@@ -116,12 +116,18 @@ check("el segundo canje es rechazado", !againErr && againRows === 0, `filas afec
 const promoB = await makePromotion(merchantB)
 const couponB = await issue(promoB, consumer.id)
 if (!couponB.error) {
-  const { error: crossErr } = await ownerA.client.rpc("redeem_coupon", {
+  // El RPC autoriza antes de mutar y devuelve cero filas tanto para un cupón
+  // ajeno como para uno inexistente: no hay oráculo de existencia entre
+  // comercios. Se comprueba además que el cupón de B siga intacto.
+  const { data: crossData, error: crossErr } = await ownerA.client.rpc("redeem_coupon", {
     p_token_hash: hashToken(couponB.token),
   })
-  check("A no puede canjear un cupón de B",
-    !!crossErr && (crossErr.code === "42501" || /no autorizado/.test(crossErr.message)),
-    crossErr?.message ?? "no se bloqueó")
+  const crossRows = Array.isArray(crossData) ? crossData.length : crossData ? 1 : 0
+  const { data: bStill } = await admin
+    .from("coupon_issues").select("status").eq("token_hash", hashToken(couponB.token)).single()
+  check("A no puede canjear un cupón de B y no lo consume",
+    !crossErr && crossRows === 0 && bStill?.status === "issued",
+    `filas=${crossRows}, estado del cupón de B=${bStill?.status}`)
 }
 
 const { error: anonInsertErr } = await anonClient.from("coupon_issues").insert({

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingBag, User, LogOut, Home, ScanLine, Award } from "lucide-react"
+import { ShoppingBag, User, LogOut, Home, ScanLine, Award, Tag, Store } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import type { User as SupabaseUser, UserResponse, AuthChangeEvent, Session } from "@supabase/supabase-js"
@@ -45,6 +45,7 @@ export function SiteHeader() {
 
   const navItems = [
     { href: "/", label: "Inicio", icon: Home },
+    { href: "/promociones", label: "Promos", icon: Tag },
     { href: "/scan", label: "Escanear", icon: ScanLine },
     { href: "/profile", label: "Perfil", icon: Award },
   ]
@@ -93,6 +94,10 @@ export function SiteHeader() {
                   <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--muted-foreground)', borderBottom: '1px solid var(--border)' }}>
                     {user.email}
                   </div>
+                  <Link href="/comercio" className="dropdown-item">
+                    <Store size={16} />
+                    Mi comercio
+                  </Link>
                   <button onClick={handleSignOut} className="dropdown-item danger">
                     <LogOut size={16} />
                     Salir
@@ -111,7 +116,7 @@ export function SiteHeader() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-background border-t md:hidden z-50">
-        <div className="grid grid-cols-3 h-16">
+        <div className="grid grid-cols-4 h-16">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
