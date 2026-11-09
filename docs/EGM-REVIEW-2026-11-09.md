@@ -146,3 +146,42 @@ La herramienta captura el teléfono del cliente en el local y envía un cupón d
 El brief no se puede aprobar ni construir tal como está. Antes de escribir código, cerrar B1, B2 y B7: línea base, los cinco apartados Heilmeier faltantes, y validación del diagnóstico del dolor con comercios reales.
 
 La cuña más vendible del documento —el dolor de reputación en Google Business Profile, §5— está presentada como accesorio y merece evaluarse como producto principal.
+
+---
+
+# Ronda 2 — revisión del código implementado
+
+**Fecha:** 2026-11-09 (misma jornada, tras la primera implementación)
+**Objeto:** el código nuevo del circuito de cupones, no el brief
+**Revisores:** `egm-design` (seguridad) y `egm-zoom-out` (simplicidad), en contexto fresco
+
+## Veredicto
+
+El núcleo criptográfico pasó. Los revisores confirmaron explícitamente: `service_role` confinado al servidor (ningún fichero `"use client"` importa el cliente administrativo), CSPRNG con solo `sha256` en reposo, `coupon_issues` sin política de INSERT, y las dos carreras —canje y límites— resueltas correctamente.
+
+Encontraron **siete fallos mayores** que la primera implementación no cubría. Todos corregidos en `20261109000800_security_hardening.sql` y en el código.
+
+## Correcciones aplicadas
+
+| # | Hallazgo | Corrección |
+|---|---|---|
+| S1 | `redeem_coupon` autorizaba después de mutar: `403` para token ajeno real, `404` para inexistente → oráculo de existencia entre comercios | `SELECT ... FOR UPDATE`, autorizar antes de tocar la fila, devolver cero filas idénticamente en los cuatro casos |
+| S2 | `p_store_id` se escribía sin verificar tenencia; `redemptions` es append-only, así que una atribución cruzada sería incorregible | Validación de que la sucursal pertenece al comercio, con `22023` si no |
+| S3 | La emisión ignoraba `merchants.status`; el canje ignoraba el estado actual de la promoción | Ambos comprobados; un comercio suspendido deja de poder emitir |
+| S4 | La RLS filtra filas, no columnas: `anon` leía `max_redemptions`, `created_at` y `merchant_id` de toda promoción publicada | `revoke select` + grant por columna en `promotions` y `merchants` |
+| S5 | `for all` permitía al owner borrar su propia membership — el índice único exige uno, no prohíbe cero | Políticas `insert`/`update`/`delete` separadas; el delete excluye `role = 'owner'` |
+| S6 | `for all` permitía borrar promociones, con cascade sobre los cupones emitidos y no canjeados | Sin política de delete; solo insert y update |
+| S7 | `product-coupon.tsx` era código muerto: su `promotionId` era opcional y el único call site no lo pasaba, así que la rama de emisión era inalcanzable | Componente eliminado; el revisor detectó además que duplicaba `coupon-claim.tsx` con manejo divergente |
+| S8 | El nav no tenía enlace al marketplace ni al panel: **DESCUBRIR era inalcanzable** | Añadidos `/promociones` y "Mi comercio" |
+
+## Pendientes reconocidos y no resueltos
+
+- **Sin límite de tasa en la emisión.** Cualquier sesión puede emitir; N cuentas pueden agotar el tope de una promoción sin canjear nada. Requiere rate limiting, no está implementado.
+- **Sin vía de revocación de un cupón ya emitido.** Una promoción se puede pausar, pero los cupones en circulación no se pueden anular.
+- **Migraciones no idempotentes ante esquema preexistente distinto.** Todas son `create ... if not exists`: si una tabla ya existiera con otra forma, el `create` no hace nada y los fallos aparecen después, en silencio. No aplica al despliegue actual (las tablas no existían), pero es una trampa a futuro.
+- **`resolveExpiry` topa a 30 días** aunque la promoción dure más. Decisión no documentada en el brief.
+- **El segundo proyecto `vwjdfyljacoxwabtfoco`** queda sin tocar, como pediste.
+
+## Lo que los revisores dijeron que no hay que tocar
+
+Agregación de contadores en JS (correcto a esta escala, no convertir a RPC ni a vista materializada); los tres contadores del panel son resultado real del circuito, no analítica especulativa; `/api/promotions` no confía en el `merchantId` del cuerpo — el insert va con el cliente del usuario y RLS lo valida.
