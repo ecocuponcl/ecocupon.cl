@@ -12,7 +12,7 @@ echo -e "${GREEN}🚀 SmarterMCP VPS Deploy${NC}"
 
 INSTALL_DIR="/root/smarteros-mcp"
 SUPABASE_URL="https://uyxvzztnsvfcqmgkrnol.supabase.co"
-SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5eHZ6enRuc3ZmY3FtZ2tybm9sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTEzMDQ1MywiZXhwIjoyMDg2NzA2NDUzfQ.iITIEcGC-HnhYsgPrEDwboLcHpdh6JkGsYvI4aW1_Sk"
+SUPABASE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
 
 # Crear directorio
 mkdir -p "$INSTALL_DIR"

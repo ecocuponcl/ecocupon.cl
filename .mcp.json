@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=uyxvzztnsvfcqmgkrnol"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
+    },
+    "smarteros": {
+      "command": "node",
+      "args": ["./smarteros-mcp/index.js"],
+      "env": {
+        "SUPABASE_URL": "https://uyxvzztnsvfcqmgkrnol.supabase.co",
+        "SUPABASE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}"
+      }
+    }
+  }
+}
